@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { commonService, type TransactionCategoryDTO, type TransactionTypeDTO } from "../services/commonService";
@@ -19,106 +18,11 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import { Button } from "../components/ui/button"
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
+
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
-import { CheckboxItem } from "@radix-ui/react-dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Input } from "../components/ui/input";
-
-
-export const columns: ColumnDef<TransactionDto>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <CheckboxItem
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <CheckboxItem
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
-    ),
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-      return <div className="text-right font-medium">{formatted}</div>
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const transaction = row.original
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(transaction.description)}
-            >
-              Copy transaction ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
 
 export default function Transactions() {
   const { user } = useAuth();
@@ -137,6 +41,79 @@ export default function Transactions() {
     amount: 0,
     transactionDate: new Date().toISOString().split('T')[0],
   });
+
+
+  const columns: ColumnDef<TransactionDto>[] = [
+    {
+      accessorKey: "id",
+      header: "Transaction Id",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("id")}</div>
+      ),
+    },
+    {
+      accessorKey: "categoryId",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Category
+            <ArrowUpDown />
+          </Button>
+        )
+      },
+      cell: ({ row }) => <div className="lowercase">{transactionCategories.find(cat => cat.id === row.getValue("categoryId"))?.name}</div>,
+      filterFn: (row, id, filterValue) => {return row.getValue(id) === parseInt(filterValue, 10)},
+    },
+    {
+      accessorKey: "transactionTypeId",
+      header: () => <div className="text-left">Transaction Type</div>,
+      cell: ({ row }) => <div className="lowercase text-left">{transactionTypes.find(type => type.id === row.getValue("transactionTypeId"))?.name}</div>,
+      filterFn: (row, id, filterValue) => {return row.getValue(id) === parseInt(filterValue, 10)},
+    },
+     {
+      accessorKey: "amount",
+      header: () => <div className="text-left">Amount</div>,
+      cell: ({ row }) => {
+        const amount = parseFloat(row.getValue("amount"))
+        const formatted = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(amount)
+        return <div className="text-left font-medium">{formatted}</div>
+      },
+    },
+    // {
+    //   id: "actions",
+    //   enableHiding: false,
+    //   cell: ({ row }) => {
+    //     const transaction = row.original
+    //     return (
+    //       <DropdownMenu>
+    //         <DropdownMenuTrigger asChild>
+    //           <Button variant="ghost" className="h-8 w-8 p-0">
+    //             <span className="sr-only">Open menu</span>
+    //             <MoreHorizontal />
+    //           </Button>
+    //         </DropdownMenuTrigger>
+    //         <DropdownMenuContent align="end">
+    //           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+    //           <DropdownMenuItem
+    //             onClick={() => navigator.clipboard.writeText(transaction.description)}
+    //           >
+    //             Copy transaction ID
+    //           </DropdownMenuItem>
+    //           <DropdownMenuSeparator />
+    //           <DropdownMenuItem>View customer</DropdownMenuItem>
+    //           <DropdownMenuItem>View payment details</DropdownMenuItem>
+    //         </DropdownMenuContent>
+    //       </DropdownMenu>
+    //     )
+    //   },
+    // },
+  ]
 
   useEffect(() => {
     loadTransactions();
@@ -170,7 +147,7 @@ export default function Transactions() {
     try {
       const categories = await commonService.getTransactionCategories();
       setTransactionCategories(categories);
-      
+
     } catch (error) {
       console.error("Failed to load transaction categories:", error);
     }
@@ -271,41 +248,27 @@ export default function Transactions() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex items-center py-4 gap-4">
+        <select
+          value={table.getColumn("categoryId")?.getFilterValue() as string ?? ""}
+          onChange={(e) => table.getColumn("categoryId")?.setFilterValue(e.target.value)}
+          className="max-w-sm border rounded px-2 py-1"
+        >
+          <option value="">All Categories</option>
+          {transactionCategories.map(cat => (
+            <option key={cat.id} value={cat.id}>{cat.name}</option>
+          ))}
+        </select>
+         <select
+          value={table.getColumn("transactionTypeId")?.getFilterValue() as string ?? ""}
+          onChange={(e) => table.getColumn("transactionTypeId")?.setFilterValue(e.target.value)}
+          className="max-w-sm border rounded px-2 py-1"
+        >
+          <option value="">Transaction Types</option>
+          {transactionTypes.map(type => (
+            <option key={type.id} value={type.id}>{type.name}</option>
+          ))}
+        </select>
       </div>
       <div className="overflow-hidden rounded-md border">
         <Table>
@@ -318,9 +281,9 @@ export default function Transactions() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
