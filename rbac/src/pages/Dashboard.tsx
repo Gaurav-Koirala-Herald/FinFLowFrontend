@@ -40,8 +40,8 @@ export default function FinancialDashboard() {
         if (!user?.userId) return;
 
         const response: Transaction[] = await transactionService.getAllTransactions(user.userId);
-        setTransactions(response); // Populate transactions
-        calculateMetrics(response); // Update UI metrics
+        setTransactions(response); 
+        calculateMetrics(response); 
       } catch (error) {
         console.error("Failed to fetch transactions:", error);
       } finally {
@@ -53,14 +53,14 @@ export default function FinancialDashboard() {
   }, [user?.userId]);
 
   const calculateMetrics = (data: Transaction[]) => {
-    const incomeTransactions = data.filter((t) => t.transactionTypeId === 1); // Income transactions
-    const expenseTransactions = data.filter((t) => t.transactionTypeId === 2); // Expense transactions
+    const incomeTransactions = data.filter((t) => t.transactionTypeId === 1);
+    const expenseTransactions = data.filter((t) => t.transactionTypeId === 2);
 
     const incomeTotal = incomeTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0);
     const expenseTotal = expenseTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0);
 
     setTotalBalance(incomeTotal - expenseTotal);
-    setMonthlyIncome(incomeTotal); // Assuming monthly transactions are pre-filtered
+    setMonthlyIncome(incomeTotal);
     setMonthlyExpenses(expenseTotal);
 
     const savingsRatePercentage =
