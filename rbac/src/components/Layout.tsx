@@ -1,10 +1,11 @@
 "use client"
 
-import { Outlet, Link, useLocation, useNavigate, NavLink } from "react-router-dom"
+import { Outlet, Link, useLocation, useNavigate, } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
-import { Users, Shield, LayoutDashboard, LogOut, Menu, X, User, DollarSign, Globe } from "lucide-react"
+import { Users, Shield, LayoutDashboard, LogOut, Menu, X, User, DollarSign, Globe, MessageCircle } from "lucide-react"
 import { useState } from "react"
 import Footer from "./Footer"
+import { ToastContainer } from "react-toastify"
 
 export default function Layout() {
   const { user, logout, hasPrivilege } = useAuth()
@@ -18,10 +19,12 @@ export default function Layout() {
   }
 
   const navItems = [
+   
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, privilege: null },
     // { path: "/users", label: "Users", icon: Users, privilege: "VIEW_STAFF_LIST" },
     // { path: "/roles", label: "Roles", icon: Shield, privilege: "VIEW_ROLES" },
     { path: "/transactions", label: "Transactions", icon: DollarSign, privilege: null },
+     {path: "/forums", label: "Forums", icon: MessageCircle, privilege: null},
     { path: "/profile", label: "Profile", icon: User, privilege: null },
      { path: "/nepse", label: "Nepse", icon: Globe, privilege: null },
   ]
@@ -121,6 +124,17 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover = {false}
+        theme="light"
+      />
     </div>
   )
 }

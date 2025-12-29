@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import ProfilePage from "./pages/Profile"
 import Transactions from "./pages/Transactions"
 import { NepseDashboard } from "./pages/NepseDashboard"
+import FinancialForum from "./pages/FinancialForums"
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth()
@@ -74,6 +75,11 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/forums" element={
+          <ProtectedRoute>
+            <FinancialForum />
+          </ProtectedRoute>
+        } />  
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" />} />

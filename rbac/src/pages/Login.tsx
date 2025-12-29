@@ -40,8 +40,8 @@ export default function Login() {
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-center text-foreground mb-2">RBAC Admin Panel</h1>
-          <p className="text-center text-muted-foreground mb-8">Sign in to manage users and roles</p>
+          <h1 className="text-2xl font-bold text-center text-foreground mb-2">FinFlow Login</h1>
+          <p className="text-center text-muted-foreground mb-8">Sign in to manage your finances</p>
 
           {error && (
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
