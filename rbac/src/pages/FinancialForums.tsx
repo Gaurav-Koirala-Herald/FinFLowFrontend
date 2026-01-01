@@ -4,7 +4,8 @@ import { toast } from 'react-toastify';
 import { postsService, type PostsDTO } from '../services/postsService';
 import { interactionService } from '../services/interaction';
 import { useAuth } from '../contexts/AuthContext';
-
+import type { CommentDTO } from '../services/commentService';
+import { commentService } from '../services/commentService';
 export default function FinancialForum() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<PostsDTO[]>([]);
@@ -14,7 +15,11 @@ export default function FinancialForum() {
   const [loading, setLoading] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [sharedPosts, setSharedPosts] = useState<Set<number>>(new Set());
-
+  const [comments,setComments] = useState<CommentDTO[]>([]);
+  const [commentCount , setCommentCount] = useState<number>(0);
+  const [likeCount , setLikeCount] = useState<number>(0); 
+  const [shareCount , setShareCount] = useState<number>(0);
+  
   const stats = [
     { icon: MessageSquare, label: 'All Members', count: posts.length.toString(), bg: 'bg-blue-500' },
     { icon: Users, label: 'Chats', count: posts.reduce((acc, post) => acc + (post.commentCount || 0), 0).toString(), bg: 'bg-purple-500' },
@@ -29,7 +34,12 @@ export default function FinancialForum() {
     try {
       setLoading(true);
       const data = await postsService.getAllPosts();
+      
+      
       setPosts(data);
+      setCommentCount(data.reduce((acc, post) => acc + (post.commentCount || 0), 0));
+      setLikeCount(data.reduce((acc, post) => acc + (post.likeCount || 0), 0));
+      setShareCount(data.reduce((acc, post) => acc + (post.shareCount || 0), 0));
     } catch (error) {
       console.error('Error loading posts:', error);
       toast.error('Failed to load posts. Please try again.');
@@ -37,6 +47,16 @@ export default function FinancialForum() {
       setLoading(false);
     }
   };
+
+  const loadComments = async (postId: number) => {
+    try {
+      const data = await commentService.getCommentsByPostId(postId);
+      setComments(data);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+      toast.error('Failed to load comments. Please try again.');
+    }
+  }
 
   const handleCreatePost = async () => {
     if (!newPost.title.trim() || !newPost.content.trim()) {

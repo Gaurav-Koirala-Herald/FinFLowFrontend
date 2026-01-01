@@ -58,4 +58,8 @@ export const interactionService = {
     const response = await api.get<PostInteractionDTO[]>(`interactions/user/${userId}`);
     return response.data;
   },
+  async getLikesCount(postId: number): Promise<number> {
+    const response = await api.get<number>(`posts/like-count`,{ params: { postId } });
+    return response.data;
+  },
 };
