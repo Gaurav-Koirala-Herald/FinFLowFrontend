@@ -192,6 +192,15 @@ export default function TransactionTable({
                 </td>
               </tr>
             ))}
+            <tr>
+              <td className="px-4 py-3 flex justify-center gap-2" colSpan={6}>
+              Total
+              </td>
+              <td className="px-4 py-3 text-sm text-right font-medium">
+                {filteredData.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}
+              </td>
+              <td></td>
+            </tr>
           </tbody>
         </table>
       </div>
