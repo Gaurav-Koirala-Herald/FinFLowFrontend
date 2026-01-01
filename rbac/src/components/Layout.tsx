@@ -6,6 +6,7 @@ import { Users, Shield, LayoutDashboard, LogOut, Menu, X, User, DollarSign, Glob
 import { useState } from "react"
 import Footer from "./Footer"
 import { ToastContainer } from "react-toastify"
+import { Toaster } from "./ui/sonner"
 
 export default function Layout() {
   const { user, logout, hasPrivilege } = useAuth()
@@ -124,17 +125,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <ToastContainer
-        position="top-center"
-        autoClose={3000}
-        hideProgressBar={true}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover = {false}
-        theme="light"
-      />
+      <Toaster richColors position="top-right" theme="light" expand={true}/>
     </div>
   )
 }
