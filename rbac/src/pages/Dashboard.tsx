@@ -1,24 +1,26 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Line } from "react-chartjs-2";
+import { Line, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend);
 
 import { transactionService, type Transaction } from "../services/transactionService";
 import { useAuth } from "../contexts/AuthContext";
 import { type ChartOptions } from "chart.js";
-import { TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Calendar, PieChart as PieChartIcon } from "lucide-react";
+import { commonService } from "../services/commonService";
 
 export default function FinancialDashboard() {
   const { user } = useAuth();
@@ -33,17 +35,18 @@ export default function FinancialDashboard() {
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [savingsRate, setSavingsRate] = useState(0);
   
-  // Animate cards on load
   const [loaded, setLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [incomeData, setIncomeData] = useState<{ labels: string[]; datasets: { data: number[]; backgroundColor: string[]; borderColor: string[]; borderWidth: number; }[] }>({ labels: [], datasets: [] });
+  const [expenseData, setExpenseData] = useState<{ labels: string[]; datasets: { data: number[]; backgroundColor: string[]; borderColor: string[]; borderWidth: number; }[] }>({ labels: [], datasets: [] });
   
   const headerRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+  const pieChartsRef = useRef<HTMLDivElement>(null);
   const transactionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
@@ -59,17 +62,22 @@ export default function FinancialDashboard() {
         setLoaded(false); 
         if (!user?.userId) return;
 
-        const response: Transaction[] = await transactionService.getAllTransactions(user.userId);
+        const response = await transactionService.getAllTransactions(user.userId);
         setTransactions(response); 
         calculateMetrics(response);
+        
+        const income = await getIncomeByCategory(response);
+        const expense = await getExpenseByCategory(response);
+        setIncomeData(income);
+        setExpenseData(expense);
 
         setTimeout(() => {
           setLoading(false);
 
           setTimeout(() => {
             setLoaded(true);
-          }, 100);
-        }, 500);
+          }, 10);
+        }, 10);
       } catch (error) {
         console.error("Failed to fetch transactions:", error);
         setLoading(false);
@@ -96,6 +104,78 @@ export default function FinancialDashboard() {
     const savingsRatePercentage =
       incomeTotal > 0 ? ((incomeTotal - expenseTotal) / incomeTotal) * 100 : 0;
     setSavingsRate(savingsRatePercentage);
+  };
+
+
+  const getIncomeByCategory = async (data: Transaction[]) => {
+    const categoryMap: { [key: string]: number } = {};
+    const transactionCategories = await commonService.getTransactionCategories();
+    data
+      .filter((t) => t.transactionTypeId === 1)
+      .forEach((t) => {
+        const categoryName = transactionCategories.find(cat => cat.id === t.categoryId)?.name || "Uncategorized";
+        categoryMap[categoryName] = (categoryMap[categoryName] || 0) + (t.amount ?? 0);
+      });
+
+
+    return {
+      labels: Object.keys(categoryMap),
+      datasets: [{
+        data: Object.values(categoryMap),
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(255, 159, 64, 0.8)',
+          'rgba(99, 255, 132, 0.8)',
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(99, 255, 132, 1)',
+        ],
+        borderWidth: 2,
+      }]
+    };
+  };
+
+  const getExpenseByCategory = async(data: Transaction[]) => {
+    const categoryMap: { [key: string]: number } = {};
+    const transactionCategories = await commonService.getTransactionCategories();
+    data
+      .filter((t) => t.transactionTypeId === 2)
+      .forEach((t) => {
+        const categoryName = transactionCategories.find(cat => cat.id === t.categoryId)?.name || "Uncategorized";
+        categoryMap[categoryName] = (categoryMap[categoryName] || 0) + (t.amount ?? 0);
+      });
+
+    return {
+      labels: Object.keys(categoryMap),
+      datasets: [{
+        data: Object.values(categoryMap),
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(255, 159, 64, 0.8)',
+          'rgba(255, 205, 86, 0.8)',
+          'rgba(201, 203, 207, 0.8)',
+          'rgba(255, 99, 255, 0.8)',
+          'rgba(255, 206, 132, 0.8)',
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 205, 86, 1)',
+          'rgba(201, 203, 207, 1)',
+          'rgba(255, 99, 255, 1)',
+          'rgba(255, 206, 132, 1)',
+        ],
+        borderWidth: 2,
+      }]
+    };
   };
 
   const financialOverviewData = {
@@ -136,6 +216,33 @@ export default function FinancialDashboard() {
     },
   };
 
+  const pieChartOptions: ChartOptions<"pie"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom" as const,
+        labels: {
+          padding: 15,
+          font: {
+            size: 11
+          }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${label}: Rs.${value.toFixed(2)} (${percentage}%)`;
+          }
+        }
+      }
+    }
+  };
+
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
   const paginatedTransactions = transactions.slice(
     (currentPage - 1) * itemsPerPage,
@@ -164,6 +271,7 @@ export default function FinancialDashboard() {
   const headerParallax = scrollY * 0.5;
   const metricsParallax = scrollY * 0.3;
   const chartParallax = scrollY * 0.2;
+  const pieChartsParallax = scrollY * 0.18;
   const transactionsParallax = scrollY * 0.15;
 
   return (
@@ -213,7 +321,7 @@ export default function FinancialDashboard() {
             return (
               <div
                 key={idx}
-                className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 ${metric.delay} hover:scale-105 hover:shadow-2xl hover:-translate-y-1 ${
+                className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 ${metric.delay}  hover:shadow-2xl hover:-translate-y-1 ${
                   loaded ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'
                 }`}
               >
@@ -229,7 +337,6 @@ export default function FinancialDashboard() {
           })}
         </div>
 
-        {/* Financial Overview Chart - Fade up with parallax */}
         <div
           ref={chartRef}
           className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-500 hover:shadow-2xl ${
@@ -242,12 +349,54 @@ export default function FinancialDashboard() {
             <Line data={financialOverviewData} options={chartOptions} />
           </div>
         </div>
+
+        {/* Pie Charts Section */}
+        <div
+          ref={pieChartsRef}
+          className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-700 delay-[600ms] ${
+            loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+          }`}
+          style={{ transform: `translateY(${loaded ? -pieChartsParallax * 0.2 : 48}px)` }}
+        >
+          {/* Income Pie Chart */}
+          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+              Income by Category
+            </h3>
+            <div className="h-64">
+              {(incomeData).labels.length > 0 ? (
+                <Pie data={incomeData} options={pieChartOptions} />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <p>No income data available</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Expense Pie Chart */}
+          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <TrendingDown className="w-5 h-5 text-red-600" />
+              Expenses by Category
+            </h3>
+            <div className="h-64">
+              {expenseData.labels.length > 0 ? (
+                <Pie data={expenseData} options={pieChartOptions} />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <p>No expense data available</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Recent Transactions - Slide from right with parallax */}
       <div 
         ref={transactionsRef}
-        className={`flex-none w-full lg:w-80 bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-[600ms] hover:shadow-2xl max-h-[600px] overflow-y-auto relative z-10 ${
+        className={`flex-none w-full lg:w-80 bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-[700ms] hover:shadow-2xl max-h-[600px] overflow-y-auto relative z-10 ${
           loaded ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'
         }`}
         style={{ transform: `translateY(${-transactionsParallax * 0.25}px)` }}
@@ -260,11 +409,11 @@ export default function FinancialDashboard() {
           {paginatedTransactions.map((transaction, idx) => (
             <li
               key={transaction.id}
-              className={`flex justify-between items-center rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/50 p-4 shadow-sm transition-all duration-500 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:scale-[1.02] hover:shadow-md ${
+              className={`flex justify-between items-center rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/50 p-4 shadow-sm transition-all duration-500 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50  hover:shadow-md ${
                 loaded ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
               }`}
               style={{
-                transitionDelay: `${700 + idx * 100}ms`
+                transitionDelay: `${800 + idx * 100}ms`
               }}
             >
               <div className="flex-1">
@@ -298,7 +447,7 @@ export default function FinancialDashboard() {
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
-            className="text-sm text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
+            className="text-sm text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200  active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
           >
             Previous
           </button>
@@ -308,7 +457,7 @@ export default function FinancialDashboard() {
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className="text-sm text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
+            className="text-sm text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200  active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
           >
             Next
           </button>

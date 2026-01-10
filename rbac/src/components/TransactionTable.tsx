@@ -81,8 +81,22 @@ export default function TransactionTable({
       }, 300)
     }
   }
+  const getIncome = () => {
+    return filteredData.reduce((sum, t) => {
+      const type = transactionTypes.find(tt => tt.id === t.transactionTypeId);
+      return type?.name.toLowerCase() === 'income' ? sum + t.amount : sum;
+    }, 0);
+  }
+  const getExpense= () => {
+    return filteredData.reduce((sum, t) => {
+      const type = transactionTypes.find(tt => tt.id === t.transactionTypeId);
+      return type?.name.toLowerCase() === 'expense' ? sum + t.amount : sum;
+    }, 0);
+  }
+  const calculateNetWorth = () => {
+    return getIncome() - getExpense();
+  }
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [search, selectedCategory, selectedType])
@@ -193,13 +207,15 @@ export default function TransactionTable({
               </tr>
             ))}
             <tr>
-              <td className="px-4 py-3 flex justify-center gap-2" colSpan={6}>
-              Total
-              </td>
-              <td className="px-4 py-3 text-sm text-right font-medium">
-                {filteredData.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}
+              <td className="px-4 py-3 flex justify-center gap-2" colSpan={7}>
+              <p className="font-bold">Net Worth</p>
               </td>
               <td></td>
+              <td></td>
+              <td></td>
+              <td className="px-4 py-3 text-sm text-right font-bold">
+                Rs.{calculateNetWorth().toLocaleString()}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -213,7 +229,7 @@ export default function TransactionTable({
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
-            className="text-sm text-blue-500 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
+            className="text-sm text-blue-500 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
           >
             Previous
           </button>
