@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { X } from "lucide-react"
-import { Button } from "../components/ui/button"
+import { Button } from "./ui/button"
 import { z } from "zod"
 
 const transactionSchema = z.object({
@@ -57,9 +57,8 @@ export default function TransactionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95">
+      <div className="bg-white w-100 max-w-xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95">
         
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-blue-200 bg-gradient-to-r from-blue-50 to-white">
           <div>
             <h2 className="text-xl font-bold text-blue-700">
@@ -76,7 +75,6 @@ export default function TransactionModal({
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-6 space-y-4">
           <input type="hidden" value={formData.id}></input>
           <input

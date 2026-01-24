@@ -1,7 +1,12 @@
 import axios from "axios"
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.koiralagaurav.com.np/api"
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5124/api"
 
+
+export interface CommonDTO{
+  code : number
+  message : string
+}
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {

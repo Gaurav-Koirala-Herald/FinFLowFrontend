@@ -8,7 +8,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { Button } from "../components/ui/button"
 import { Plus } from "lucide-react"
 import { commonService, type TransactionCategoryDTO } from "../services/commonService"
-import TransactionModal from "../components/createTransaction"
+import TransactionModal from "../components/CreateTransaction"
 
 export default function Transactions() {
   const { user } = useAuth()
@@ -33,6 +33,7 @@ export default function Transactions() {
   const loadTransactions = async () => {
     try {
       const data = await transactionService.getAllTransactions(user!.userId)
+      console.log(data);
       setTransactions(data)
     } catch {
       toast.error("Failed to load transactions.")

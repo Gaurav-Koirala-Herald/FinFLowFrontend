@@ -10,6 +10,9 @@ import ProfilePage from "./pages/Profile"
 import Transactions from "./pages/Transactions"
 import { NepseDashboard } from "./pages/NepseDashboard"
 import FinancialForum from "./pages/FinancialForums"
+import LandingPage from "./pages/LandingPage"
+import Goals from "./pages/Goals"
+import Reports from "./pages/Report"
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth()
@@ -26,6 +29,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
 
+      <Route path="/" element={<LandingPage />} />
       <Route element={<Layout />}>
         <Route
           path="/dashboard"
@@ -59,6 +63,22 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/goals"
+          element={
+            <ProtectedRoute>
+              <Goals /> 
+            </ProtectedRoute>
+          }
+        />
+        <Route
+        path ="/reports"
+        element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        }
+        />
          <Route
           path="/transactions"
           element={
@@ -82,7 +102,7 @@ export default function App() {
         } />  
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route path="/" element={<Navigate to="/" />} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
       
     </Routes>

@@ -94,7 +94,7 @@ export default function FinancialDashboard() {
     const incomeTransactions = data.filter((t) => t.transactionTypeId === 1);
     const expenseTransactions = data.filter((t) => t.transactionTypeId === 2);
 
-    const incomeTotal = incomeTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0);
+    const incomeTotal = incomeTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0) ;
     const expenseTotal = expenseTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0);
 
     setTotalBalance(incomeTotal - expenseTotal);

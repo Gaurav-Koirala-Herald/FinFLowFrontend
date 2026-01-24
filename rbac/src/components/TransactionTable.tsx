@@ -39,7 +39,7 @@ export default function TransactionTable({
   const [isLoaded, setIsLoaded] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [isPageChanging, setIsPageChanging] = useState(false)
-  const itemsPerPage = 10
+  const itemsPerPage = 5
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), 100)
@@ -221,7 +221,6 @@ export default function TransactionTable({
         </table>
       </div>
 
-      {/* Pagination */}
       {filteredData.length > 0 && (
         <div className={`relative flex justify-between items-center mt-4 pt-4 border-t border-border transition-all duration-700 delay-400 ${
           isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
