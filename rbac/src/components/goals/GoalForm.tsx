@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { type Goal,type  CreateGoalRequest, type UpdateGoalRequest } from '../../services/goalService';
+import { type Goal, type CreateGoalRequest, type UpdateGoalRequest } from '../../services/goalService';
 import { goalService } from '../../services/goalService';
+import { X } from 'lucide-react';
+import { Button } from '../ui/button';
 
 interface GoalFormProps {
+  isOpen: boolean;
   goal?: Goal | null;
   onSubmit: () => void;
   onCancel: () => void;
 }
 
-const GoalForm: React.FC<GoalFormProps> = ({ goal, onSubmit, onCancel }) => {
+const GoalForm: React.FC<GoalFormProps> = ({ isOpen, goal, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     targetAmount: '',
@@ -20,19 +23,29 @@ const GoalForm: React.FC<GoalFormProps> = ({ goal, onSubmit, onCancel }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (goal) {
       setFormData({
         name: goal.name,
         targetAmount: goal.targetAmount.toString(),
-        deadline: goal.deadline.split('T')[0], // Format for date input
+        deadline: goal.deadline.split('T')[0],
         type: goal.type,
         status: goal.status
       });
+    } else {
+      setFormData({
+        name: '',
+        targetAmount: '',
+        deadline: '',
+        type: 'Savings',
+        status: 'Active'
+      });
     }
-  }, [goal]);
+    setError(null);
+  }, [isOpen, goal]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
     setError(null);
 
@@ -49,7 +62,6 @@ const GoalForm: React.FC<GoalFormProps> = ({ goal, onSubmit, onCancel }) => {
       }
 
       if (goal) {
-        // Update existing goal
         const updateData: UpdateGoalRequest = {
           name: formData.name,
           targetAmount: targetAmount,
@@ -59,7 +71,6 @@ const GoalForm: React.FC<GoalFormProps> = ({ goal, onSubmit, onCancel }) => {
         };
         await goalService.updateGoal(goal.id, updateData);
       } else {
-        // Create new goal
         const createData: CreateGoalRequest = {
           name: formData.name,
           targetAmount: targetAmount,
@@ -70,6 +81,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ goal, onSubmit, onCancel }) => {
       }
 
       onSubmit();
+      onCancel();
     } catch (err: any) {
       setError(err.message || 'Failed to save goal');
       console.error('Error saving goal:', err);
@@ -92,140 +104,144 @@ const GoalForm: React.FC<GoalFormProps> = ({ goal, onSubmit, onCancel }) => {
     return tomorrow.toISOString().split('T')[0];
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">
-          {goal ? 'Edit Goal' : 'Create New Goal'}
-        </h3>
-        <button
-          onClick={onCancel}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <div className="text-sm text-red-700">{error}</div>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Goal Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Goal Name *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            maxLength={200}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="e.g., Emergency Fund, New Car, Vacation"
-          />
-        </div>
-
-        {/* Target Amount */}
-        <div>
-          <label htmlFor="targetAmount" className="block text-sm font-medium text-gray-700 mb-1">
-            Target Amount (NPR) *
-          </label>
-          <input
-            type="number"
-            id="targetAmount"
-            name="targetAmount"
-            value={formData.targetAmount}
-            onChange={handleChange}
-            required
-            min="0.01"
-            step="0.01"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="100000"
-          />
-        </div>
-
-        {/* Goal Type */}
-        <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
-            Goal Type *
-          </label>
-          <select
-            id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="Savings">💰 Savings</option>
-            <option value="Investment">📈 Investment</option>
-            <option value="DebtRepayment">💳 Debt Repayment</option>
-          </select>
-        </div>
-
-        {/* Deadline */}
-        <div>
-          <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-1">
-            Deadline *
-          </label>
-          <input
-            type="date"
-            id="deadline"
-            name="deadline"
-            value={formData.deadline}
-            onChange={handleChange}
-            required
-            min={getMinDate()}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Status (only for editing) */}
-        {goal && (
+    <div className="fixed h-full inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95">
+        
+        <div className="flex items-center justify-between px-6 py-5 border-b border-blue-200 bg-gradient-to-r from-blue-50 to-white">
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="Active">Active</option>
-              <option value="Paused">Paused</option>
-              <option value="Completed">Completed</option>
-            </select>
+            <h2 className="text-xl font-bold text-blue-700">
+              {goal ? "Edit Goal" : "Create New Goal"}
+            </h2>
+            <p className="text-sm text-blue-500">
+              {goal
+                ? "Update your financial goal details"
+                : "Set a new financial target"}
+            </p>
+          </div>
+          <button 
+            onClick={onCancel} 
+            className="text-blue-400 hover:text-blue-600 hover:bg-blue-100 rounded-full p-1 transition-colors"
+          >
+            <X />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mx-6 mt-4 bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="text-sm text-red-700">{error}</div>
           </div>
         )}
 
-        {/* Form Actions */}
-        <div className="flex justify-end space-x-3 pt-4">
-          <button
-            type="button"
+        <div className="p-6 space-y-4">
+          
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Goal Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              maxLength={200}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="e.g., Emergency Fund, New Car, Vacation"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="targetAmount" className="block text-sm font-medium text-gray-700 mb-1">
+              Target Amount (NPR)
+            </label>
+            <input
+              type="number"
+              id="targetAmount"
+              name="targetAmount"
+              value={formData.targetAmount}
+              onChange={handleChange}
+              min="0.01"
+              step="0.01"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="100000"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+                Goal Type
+              </label>
+              <select
+                id="type"
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              >
+                <option value="Savings">Savings</option>
+                <option value="Investment">Investment</option>
+                <option value="DebtRepayment">Debt Repayment</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-1">
+                Deadline
+              </label>
+              <input
+                type="date"
+                id="deadline"
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleChange}
+                min={getMinDate()}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          {goal && (
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              >
+                <option value="Active">Active</option>
+                <option value="Paused">Paused</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+          <Button
+            variant="outline"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
+            disabled={loading}
           >
             Cancel
-          </button>
-          <button
-            type="submit"
+          </Button>
+          <Button
+            onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Saving...' : goal ? 'Update Goal' : 'Create Goal'}
-          </button>
+          </Button>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

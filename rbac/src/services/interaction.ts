@@ -29,37 +29,44 @@ export const interactionService = {
     });
   },
 
+  async hasUserLiked(postId: number, userId: string): Promise<boolean> {
+    const response = await api.get<boolean>(`posts/${postId}/user/${userId}/liked`);
+    return response.data;
+  },
+
+  async hasUserShared(postId: number, userId: string): Promise<boolean> {
+    const response = await api.get<boolean>(`posts/${postId}/user/${userId}/shared`);
+    return response.data;
+  },
+
+  async toggleBookmark(postId: number, userId: string): Promise<void> {
+    await api.post('posts/bookmark', null, {
+      params: { postId, userId }
+    });
+  },
+
   async getPostInteractionCounts(postId: number): Promise<{
     likes: number;
     shares: number;
     comments: number;
     bookmarks: number;
   }> {
-    const response = await api.get(`interactions/post/${postId}/counts`);
-    return response.data;
-  },
-
-  async hasUserLiked(postId: number, userId: string): Promise<boolean> {
-    const response = await api.get<boolean>(`interactions/post/${postId}/user/${userId}/liked`);
-    return response.data;
-  },
-
-  async hasUserShared(postId: number, userId: string): Promise<boolean> {
-    const response = await api.get<boolean>(`interactions/post/${postId}/user/${userId}/shared`);
+    const response = await api.get(`posts/${postId}/interaction-counts`);
     return response.data;
   },
 
   async getPostInteractions(postId: number): Promise<PostInteractionDTO[]> {
-    const response = await api.get<PostInteractionDTO[]>(`interactions/post/${postId}`);
+    const response = await api.get<PostInteractionDTO[]>(`posts/${postId}/interactions`);
     return response.data;
   },
 
   async getUserInteractions(userId: string): Promise<PostInteractionDTO[]> {
-    const response = await api.get<PostInteractionDTO[]>(`interactions/user/${userId}`);
+    const response = await api.get<PostInteractionDTO[]>(`users/${userId}/interactions`);
     return response.data;
   },
+
   async getLikesCount(postId: number): Promise<number> {
-    const response = await api.get<number>(`posts/like-count`,{ params: { postId } });
+    const response = await api.get<number>(`posts/${postId}/like-count`);
     return response.data;
   },
 };

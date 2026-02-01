@@ -6,6 +6,7 @@ import CompleteGoalModal from '../components/goals/CompleteGoalModal';
 import CheckMilestoneModal from '../components/goals/CheckMilestoneModal';
 import AddMoneyModal from '../components/goals/AddMoneyModal';
 import { goalService, type Goal,type GoalProgress as GoalProgressTypes } from '../services/goalService';
+import { CreditCard, PiggyBank, TrendingUp } from 'lucide-react';
 
 const Goals: React.FC = () => {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -43,11 +44,9 @@ const Goals: React.FC = () => {
   const handleManualUpdateComplete = async () => {
     setShowManualUpdate(false);
     if (selectedGoal) {
-      // Refresh goal progress after manual update
       try {
         const updatedProgress = await goalService.getGoalProgress(selectedGoal.id);
         setGoalProgress(updatedProgress);
-        // Also refresh the selected goal data
         const updatedGoal = await goalService.getGoalsById(selectedGoal.id);
         setSelectedGoal(updatedGoal);
       } catch (error) {
@@ -60,16 +59,13 @@ const Goals: React.FC = () => {
     if (!selectedGoal) return;
     
     try {
-      // Complete the goal by setting current amount to target amount
       await goalService.updateGoal(selectedGoal.id, {
         currentAmount: selectedGoal.targetAmount,
         status: 'Completed'
       });
 
-      // Check milestones after completion
       await goalService.checkGoalMilestones(selectedGoal.id);
 
-      // Refresh goal data
       const updatedProgress = await goalService.getGoalProgress(selectedGoal.id);
       setGoalProgress(updatedProgress);
       const updatedGoal = await goalService.getGoalsById(selectedGoal.id);
@@ -89,16 +85,13 @@ const Goals: React.FC = () => {
       const newCurrentAmount = selectedGoal.currentAmount + amount;
       const newStatus = newCurrentAmount >= selectedGoal.targetAmount ? 'Completed' : selectedGoal.status;
       
-      // Update the goal with new amount
       await goalService.updateGoal(selectedGoal.id, {
         currentAmount: newCurrentAmount,
         status: newStatus
       });
 
-      // Check milestones after update
       await goalService.checkGoalMilestones(selectedGoal.id);
 
-      // Refresh goal data
       const updatedProgress = await goalService.getGoalProgress(selectedGoal.id);
       setGoalProgress(updatedProgress);
       const updatedGoal = await goalService.getGoalsById(selectedGoal.id);
@@ -144,7 +137,6 @@ const Goals: React.FC = () => {
 
     return (
       <div className="p-6">
-        {/* Header */}
         <div className="mb-8">
           <button
             onClick={handleBackToList}
@@ -155,8 +147,8 @@ const Goals: React.FC = () => {
           
           <div className="flex items-center space-x-3">
             <span className="text-3xl">
-              {selectedGoal.type === 'Savings' ? '💰' : 
-               selectedGoal.type === 'Investment' ? '📈' : '💳'}
+              {selectedGoal.type === 'Savings' ? <PiggyBank /> : 
+               selectedGoal.type === 'Investment' ? <TrendingUp /> : <CreditCard />}
             </span>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{selectedGoal.name}</h1>
@@ -171,7 +163,6 @@ const Goals: React.FC = () => {
           </div>
         </div>
 
-        {/* Goal Details */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="text-center">
@@ -208,7 +199,6 @@ const Goals: React.FC = () => {
             </div>
           </div>
 
-          {/* Progress Section */}
           {loadingProgress ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -229,7 +219,6 @@ const Goals: React.FC = () => {
           )}
         </div>
 
-        {/* Goal Actions */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Goal Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -267,7 +256,6 @@ const Goals: React.FC = () => {
           </div>
         </div>
 
-        {/* Modals */}
         <CompleteGoalModal
           goal={selectedGoal}
           isOpen={showCompleteModal}

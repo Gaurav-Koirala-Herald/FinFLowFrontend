@@ -25,12 +25,10 @@ const ManualProgressUpdate: React.FC<ManualProgressUpdateProps> = ({ goal, onUpd
         throw new Error('Current amount must be a non-negative number');
       }
 
-      // Update the goal with new current amount
       await goalService.updateGoal(goal.id, {
         currentAmount: amount
       });
 
-      // Check milestones after update
       await goalService.checkGoalMilestones(goal.id);
 
       onUpdate();

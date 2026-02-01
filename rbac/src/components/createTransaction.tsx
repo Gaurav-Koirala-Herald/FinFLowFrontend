@@ -37,6 +37,53 @@ const emptyForm: TransactionFormData = {
   description: "",
 }
 
+// Helper function to convert date to YYYY-MM-DD format
+const formatDateForInput = (date: Date | string): string => {
+  try {
+    let dateObj: Date;
+    
+    if (date instanceof Date) {
+      dateObj = date;
+    } else {
+      // Handle C# DateTime format with extra precision: "2025-12-17T07:06:42.7733333"
+      // Truncate to 3 decimal places for fractional seconds
+      const cleanedDateStr = String(date).replace(/(\.\d{3})\d*/, '$1');
+      dateObj = new Date(cleanedDateStr);
+    }
+    
+    if (isNaN(dateObj.getTime())) {
+      return new Date().toISOString().split('T')[0];
+    }
+    
+    // Format as YYYY-MM-DD
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  } catch {
+    return new Date().toISOString().split('T')[0];
+  }
+}
+
+// Helper function to parse date from string
+const parseDate = (dateValue: Date | string): Date => {
+  try {
+    if (dateValue instanceof Date) {
+      return isNaN(dateValue.getTime()) ? new Date() : dateValue;
+    }
+    
+    // Handle C# DateTime format with extra precision: "2025-12-17T07:06:42.7733333"
+    // Truncate to 3 decimal places for fractional seconds
+    const cleanedDateStr = String(dateValue).replace(/(\.\d{3})\d*/, '$1');
+    const parsed = new Date(cleanedDateStr);
+    
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  } catch {
+    return new Date();
+  }
+}
+
 export default function TransactionModal({
   isOpen,
   mode,
@@ -50,7 +97,18 @@ export default function TransactionModal({
 
   useEffect(() => {
     if (!isOpen) return
-    setFormData(mode === "edit" && initialData ? initialData : emptyForm)
+    
+    if (mode === "edit" && initialData) {
+      setFormData({
+        ...initialData,
+        transactionDate: parseDate(initialData.transactionDate)
+      })
+    } else {
+      setFormData({
+        ...emptyForm,
+        transactionDate: new Date()
+      })
+    }
   }, [isOpen, mode, initialData])
 
   if (!isOpen) return null
@@ -70,76 +128,107 @@ export default function TransactionModal({
                 : "Record a new transaction"}
             </p>
           </div>
-          <button onClick={onClose} className="text-blue-400 hover:text-blue-600">
+          <button onClick={onClose} className="text-blue-400 hover:text-blue-600 hover:bg-blue-100 rounded-full p-1 transition-colors">
             <X />
           </button>
         </div>
 
         <div className="p-6 space-y-4">
           <input type="hidden" value={formData.id}></input>
-          <input
-            className="w-full rounded-lg border border-primary px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Transaction name"
-            value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-          />
-
-          <input
-            type="number"
-            className="w-full rounded-lg border border-primary px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Amount"
-            value={formData.amount || ""}
-            onChange={e => setFormData({ ...formData, amount: +e.target.value })}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <select
-              className="rounded-lg border border-primary px-4 py-2 focus:ring-2 focus:ring-blue-500"
-              value={formData.categoryId}
-              onChange={e => setFormData({ ...formData, categoryId: +e.target.value })}
-            >
-              <option value={0}>Category</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-
-            <select
-              className="rounded-lg border border-primary px-4 py-2  focus:ring-2 focus:ring-blue-500"
-              value={formData.transactionTypeId}
-              onChange={e =>
-                setFormData({ ...formData, transactionTypeId: +e.target.value })
-              }
-            >
-              <option value={0}>Type</option>
-              {transactionTypes.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Transaction Name
+            </label>
+            <input
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="Enter transaction name"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+            />
           </div>
 
-          <input
-            type="date"
-            className="w-full rounded-lg border border-primary px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-            value={formData.transactionDate instanceof Date ? formData.transactionDate.toISOString().split('T')[0] : ''}
-            onChange={e => setFormData({ ...formData, transactionDate: new Date(e.target.value) })}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Amount
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="0.00"
+              value={formData.amount || ""}
+              onChange={e => setFormData({ ...formData, amount: +e.target.value })}
+            />
+          </div>
 
-          <textarea
-            className="w-full rounded-lg border border-primary focus:ring-2 focus:ring-blue-500 px-4 py-2 outline-none"
-            placeholder="Description (optional)"
-            rows={3}
-            value={formData.description}
-            onChange={e => setFormData({ ...formData, description: e.target.value })}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                value={formData.categoryId}
+                onChange={e => setFormData({ ...formData, categoryId: +e.target.value })}
+              >
+                <option value={0}>Select category</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Type
+              </label>
+              <select
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                value={formData.transactionTypeId}
+                onChange={e =>
+                  setFormData({ ...formData, transactionTypeId: +e.target.value })
+                }
+              >
+                <option value={0}>Select type</option>
+                {transactionTypes.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Transaction Date
+            </label>
+            <input
+              type="date"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              value={formatDateForInput(formData.transactionDate)}
+              onChange={e => setFormData({ ...formData, transactionDate: new Date(e.target.value) })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description (Optional)
+            </label>
+            <textarea
+              className="w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-4 py-2 outline-none transition-all resize-none"
+              placeholder="Add any additional notes..."
+              rows={3}
+              value={formData.description || ""}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-blue-200 bg-blue-50 flex gap-3">
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
           <Button
             variant="outline"
             onClick={onClose}
-            className="flex-1 border-blue-200 text-blue-600"
+            className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
           >
             Cancel
           </Button>
@@ -150,10 +239,10 @@ export default function TransactionModal({
             }}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {mode === "edit" ? "Update" : "Create"}
+            {mode === "edit" ? "Update Transaction" : "Create Transaction"}
           </Button>
         </div>
       </div>
     </div>
   )
-}
+} 

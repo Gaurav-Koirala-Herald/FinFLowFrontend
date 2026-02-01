@@ -1,6 +1,7 @@
 import React from 'react';
 import {type Goal } from '../../services/goalService';
 import GoalProgress from './GoalProgress';
+import { CreditCard, PiggyBank, Target, TrendingUp } from 'lucide-react';
 
 interface GoalCardProps {
   goal: Goal;
@@ -40,19 +41,19 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onClick }) 
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'Savings':
-        return '💰';
-      case 'Investment':
-        return '📈';
-      case 'DebtRepayment':
-        return '💳';
-      default:
-        return '🎯';
-    }
-  };
-
+const getTypeIcon = (type: string) => {
+  switch (type) {
+    case "Savings":
+      return PiggyBank;
+    case "Investment":
+      return TrendingUp;
+    case "DebtRepayment":
+      return CreditCard;
+    default:
+      return Target;
+  }
+};
+const Icon = getTypeIcon(goal.type);
   const isOverdue = new Date(goal.deadline) < new Date() && goal.status === 'Active';
   const daysRemaining = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
@@ -63,10 +64,9 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onClick }) 
       }`}
       onClick={() => onClick?.(goal)}
     >
-      {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center space-x-2">
-          <span className="text-2xl">{getTypeIcon(goal.type)}</span>
+          <span className="text-2xl"><Icon /> </span>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 truncate">
               {goal.name}
@@ -77,8 +77,6 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onClick }) 
           </div>
         </div>
         
-        {/* Actions */}
-       {/*hide edit/delete buttons if goal is completed*/}
 
         {goal.status === 'Completed' ? null : (
         <div className="flex space-x-1">
@@ -110,7 +108,6 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onClick }) 
         )}
       </div>
 
-      {/* Progress */}
       <div className="mb-4">
         <GoalProgress 
           currentAmount={goal.currentAmount}
@@ -119,7 +116,6 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onClick }) 
         />
       </div>
 
-      {/* Amount Info */}
       <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
         <span>Progress</span>
         <span className="font-medium">
@@ -127,7 +123,6 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onClick }) 
         </span>
       </div>
 
-      {/* Deadline Info */}
       <div className="flex justify-between items-center text-sm">
         <span className="text-gray-600">Deadline</span>
         <div className="text-right">
@@ -147,7 +142,6 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onClick }) 
         </div>
       </div>
 
-      {/* Completion indicator */}
       {goal.status === 'Completed' && (
         <div className="mt-3 flex items-center justify-center text-green-600 text-sm font-medium">
           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">

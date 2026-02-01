@@ -21,7 +21,6 @@ export default function Transactions() {
   const [mode, setMode] = useState<"create" | "edit">("create")
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDto | null>(null)
 
-  /* ---------------- LOAD DATA ---------------- */
 
   useEffect(() => {
     if (!user?.userId) return
@@ -77,6 +76,7 @@ export default function Transactions() {
 
   const handleModalSubmit = async (formData: TransactionDto) => {
     try {
+      formData.userId = user!.userId
       if (mode === "create") {
         await transactionService.createTransaction({
           ...formData,
@@ -118,7 +118,6 @@ export default function Transactions() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
@@ -131,7 +130,6 @@ export default function Transactions() {
         </Button>
       </div>
 
-      {/* Table */}
       <TransactionTable
         data={transactions}
         transactionCategories={categories}
@@ -141,7 +139,6 @@ export default function Transactions() {
         onDelete={handleDelete}
       />
 
-      {/* Modal (Create + Edit) */}
       <TransactionModal
         isOpen={isModalOpen}
         mode={mode}
@@ -153,7 +150,7 @@ export default function Transactions() {
               amount: selectedTransaction.amount,
               categoryId: selectedTransaction.categoryId,
               transactionTypeId: selectedTransaction.transactionTypeId,
-              date: selectedTransaction.transactionDate.split("T")[0],
+              transactionDate: new Date(selectedTransaction.transactionDate),
               description: selectedTransaction.description,
             }
             : undefined

@@ -48,7 +48,6 @@ const GoalProgress: React.FC<GoalProgressProps> = ({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Progress Bar */}
       <div className="relative">
         <div className="flex justify-between text-sm text-gray-600 mb-1">
           <span>Progress</span>
@@ -61,7 +60,6 @@ const GoalProgress: React.FC<GoalProgressProps> = ({
             style={{ width: `${progressPercentage}%` }}
           />
           
-          {/* Milestone markers */}
           {showMilestones && (
             <div className="absolute inset-0 flex justify-between items-center px-1">
               {[25, 50, 75].map((milestone) => (
@@ -76,7 +74,6 @@ const GoalProgress: React.FC<GoalProgressProps> = ({
         </div>
       </div>
 
-      {/* Milestone Indicators */}
       {showMilestones && displayMilestones.length > 0 && (
         <div className="grid grid-cols-4 gap-2 text-xs">
           {displayMilestones.map((milestone) => (
@@ -108,15 +105,14 @@ const GoalProgress: React.FC<GoalProgressProps> = ({
         </div>
       )}
 
-      {/* Achievement Message */}
-      {progressPercentage >= 100 && (
+     {progressPercentage >= 100 && (
         <div className="bg-green-50 border border-green-200 rounded-md p-3">
           <div className="flex items-center">
             <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span className="text-green-800 font-medium text-sm">
-              🎉 Congratulations! Goal achieved!
+              Congratulations! Goal achieved!
             </span>
           </div>
         </div>

@@ -21,8 +21,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { type ChartOptions } from "chart.js";
 import { TrendingUp, TrendingDown, DollarSign, Calendar, PieChart as PieChartIcon } from "lucide-react";
 import { commonService } from "../services/commonService";
+import { DynamicAreaChart } from "../components/DynamicAreaChart";
+import  DashboardGoals  from "../components/DashboardGoalsf";
 
-export default function FinancialDashboard() {
+export default function Dashboard() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,12 +36,12 @@ export default function FinancialDashboard() {
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [savingsRate, setSavingsRate] = useState(0);
-  
+
   const [loaded, setLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [incomeData, setIncomeData] = useState<{ labels: string[]; datasets: { data: number[]; backgroundColor: string[]; borderColor: string[]; borderWidth: number; }[] }>({ labels: [], datasets: [] });
   const [expenseData, setExpenseData] = useState<{ labels: string[]; datasets: { data: number[]; backgroundColor: string[]; borderColor: string[]; borderWidth: number; }[] }>({ labels: [], datasets: [] });
-  
+
   const headerRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -59,13 +61,13 @@ export default function FinancialDashboard() {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        setLoaded(false); 
+        setLoaded(false);
         if (!user?.userId) return;
 
         const response = await transactionService.getAllTransactions(user.userId);
-        setTransactions(response); 
+        setTransactions(response);
         calculateMetrics(response);
-        
+
         const income = await getIncomeByCategory(response);
         const expense = await getExpenseByCategory(response);
         setIncomeData(income);
@@ -94,7 +96,7 @@ export default function FinancialDashboard() {
     const incomeTransactions = data.filter((t) => t.transactionTypeId === 1);
     const expenseTransactions = data.filter((t) => t.transactionTypeId === 2);
 
-    const incomeTotal = incomeTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0) ;
+    const incomeTotal = incomeTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0);
     const expenseTotal = expenseTransactions.reduce((acc, t) => acc + (t.amount ?? 0), 0);
 
     setTotalBalance(incomeTotal - expenseTotal);
@@ -113,7 +115,7 @@ export default function FinancialDashboard() {
     data
       .filter((t) => t.transactionTypeId === 1)
       .forEach((t) => {
-        const categoryName = transactionCategories.find(cat => cat.id === t.categoryId)?.name || "Uncategorized";
+        const categoryName = transactionCategories.find((cat: { id: any; }) => cat.id === t.categoryId)?.name || "Uncategorized";
         categoryMap[categoryName] = (categoryMap[categoryName] || 0) + (t.amount ?? 0);
       });
 
@@ -143,13 +145,13 @@ export default function FinancialDashboard() {
     };
   };
 
-  const getExpenseByCategory = async(data: Transaction[]) => {
+  const getExpenseByCategory = async (data: Transaction[]) => {
     const categoryMap: { [key: string]: number } = {};
     const transactionCategories = await commonService.getTransactionCategories();
     data
       .filter((t) => t.transactionTypeId === 2)
       .forEach((t) => {
-        const categoryName = transactionCategories.find(cat => cat.id === t.categoryId)?.name || "Uncategorized";
+        const categoryName = transactionCategories.find((cat: { id: any; }) => cat.id === t.categoryId)?.name || "Uncategorized";
         categoryMap[categoryName] = (categoryMap[categoryName] || 0) + (t.amount ?? 0);
       });
 
@@ -231,7 +233,7 @@ export default function FinancialDashboard() {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const label = context.label || '';
             const value = context.parsed || 0;
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
@@ -248,6 +250,7 @@ export default function FinancialDashboard() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
 
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
@@ -277,27 +280,24 @@ export default function FinancialDashboard() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-6 relative overflow-hidden min-h-screen">
 
-      <div 
-        className={`fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pointer-events-none transition-opacity duration-1000 ${
-          loaded ? 'opacity-100' : 'opacity-0'
-        }`}
+      <div
+        className={`fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pointer-events-none transition-opacity duration-1000 ${loaded ? 'opacity-100' : 'opacity-0'
+          }`}
         style={{ transform: `translateY(${scrollY * 0.5}px)` }}
       />
-      
-      <div 
-        className={`fixed inset-0 bg-gradient-to-tr from-transparent via-blue-100/30 to-transparent pointer-events-none transition-opacity duration-1000 delay-300 ${
-          loaded ? 'opacity-100' : 'opacity-0'
-        }`}
+
+      <div
+        className={`fixed inset-0 bg-gradient-to-tr from-transparent via-blue-100/30 to-transparent pointer-events-none transition-opacity duration-1000 delay-300 ${loaded ? 'opacity-100' : 'opacity-0'
+          }`}
         style={{ transform: `translateY(${scrollY * -0.3}px)` }}
       />
 
       <div className="flex-1 space-y-6 relative z-10">
 
-        <div 
+        <div
           ref={headerRef}
-          className={`bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg transition-all duration-700 ${
-            loaded ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'
-          }`}
+          className={`bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg transition-all duration-700 ${loaded ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'
+            }`}
           style={{ transform: `translateY(${loaded ? -headerParallax * 0.1 : -48}px)` }}
         >
           <h2 className="text-lg font-semibold text-blue-700">Welcome to FinFlow</h2>
@@ -307,7 +307,7 @@ export default function FinancialDashboard() {
           </p>
         </div>
 
-        <div 
+        <div
           ref={metricsRef}
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
           style={{ transform: `translateY(${-metricsParallax * 0.15}px)` }}
@@ -321,9 +321,8 @@ export default function FinancialDashboard() {
             return (
               <div
                 key={idx}
-                className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 ${metric.delay}  hover:shadow-2xl hover:-translate-y-1 ${
-                  loaded ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'
-                }`}
+                className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 ${metric.delay}  hover:shadow-2xl hover:-translate-y-1 ${loaded ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'
+                  }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-gray-500">{metric.label}</p>
@@ -337,28 +336,24 @@ export default function FinancialDashboard() {
           })}
         </div>
 
-        <div
+        <   div
           ref={chartRef}
-          className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-500 hover:shadow-2xl ${
-            loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-          }`}
+          className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-500 hover:shadow-2xl ${loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+            }`}
           style={{ transform: `translateY(${loaded ? -chartParallax * 0.2 : 48}px)` }}
         >
           <h3 className="text-lg font-semibold text-gray-700 mb-4">Financial Overview</h3>
-          <div className="h-60">
-            <Line data={financialOverviewData} options={chartOptions} />
+          <div className="h-full min-h-[300px]">
+            <DynamicAreaChart transactions={transactions} />
           </div>
         </div>
 
-        {/* Pie Charts Section */}
         <div
           ref={pieChartsRef}
-          className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-700 delay-[600ms] ${
-            loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-          }`}
+          className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-700 delay-[600ms] ${loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+            }`}
           style={{ transform: `translateY(${loaded ? -pieChartsParallax * 0.2 : 48}px)` }}
         >
-          {/* Income Pie Chart */}
           <div className="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
             <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-green-600" />
@@ -375,7 +370,6 @@ export default function FinancialDashboard() {
             </div>
           </div>
 
-          {/* Expense Pie Chart */}
           <div className="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
             <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <TrendingDown className="w-5 h-5 text-red-600" />
@@ -392,13 +386,15 @@ export default function FinancialDashboard() {
             </div>
           </div>
         </div>
+          <DashboardGoals loaded={loaded} scrollY={scrollY} />
       </div>
 
-      <div 
+
+
+      <div
         ref={transactionsRef}
-        className={`flex-none w-full lg:w-80 bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-[700ms] hover:shadow-2xl max-h-[600px] overflow-y-auto relative z-10 ${
-          loaded ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'
-        }`}
+        className={`flex-none w-full lg:w-80 bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-[700ms] hover:shadow-2xl max-h-[600px] overflow-y-auto relative z-10 ${loaded ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'
+          }`}
         style={{ transform: `translateY(${-transactionsParallax * 0.25}px)` }}
       >
         <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -409,9 +405,8 @@ export default function FinancialDashboard() {
           {paginatedTransactions.map((transaction, idx) => (
             <li
               key={transaction.id}
-              className={`flex justify-between items-center rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/50 p-4 shadow-sm transition-all duration-500 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50  hover:shadow-md ${
-                loaded ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
-              }`}
+              className={`flex justify-between items-center rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/50 p-4 shadow-sm transition-all duration-500 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50  hover:shadow-md ${loaded ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
+                }`}
               style={{
                 transitionDelay: `${800 + idx * 100}ms`
               }}
@@ -433,9 +428,8 @@ export default function FinancialDashboard() {
                   <TrendingDown className="w-4 h-4 text-red-600" />
                 )}
                 <span
-                  className={`text-sm font-bold ${
-                    transaction.transactionTypeId === 1 ? "text-green-600" : "text-red-600"
-                  }`}
+                  className={`text-sm font-bold ${transaction.transactionTypeId === 1 ? "text-green-600" : "text-red-600"
+                    }`}
                 >
                   ${transaction.amount?.toFixed(2)}
                 </span>

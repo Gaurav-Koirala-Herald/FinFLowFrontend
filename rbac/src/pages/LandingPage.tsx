@@ -14,7 +14,8 @@ import {
   Wallet,
   BarChart3,
   DollarSign,
-  ArrowRight
+  ArrowRight,
+  Currency
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -137,7 +138,7 @@ const LandingPage: React.FC = () => {
     {
       icon: <Shield className="w-8 h-8" />,
       title: "Secure & Private",
-      description: "Bank-level security with data encryption and regular backups to protect your information."
+      description: "Data encryption and regular backups to protect your information."
     },
     {
       icon: <FileText className="w-8 h-8" />,
@@ -145,7 +146,7 @@ const LandingPage: React.FC = () => {
       description: "Download comprehensive financial reports in PDF or Excel format anytime."
     },
     {
-      icon: <DollarSign className="w-8 h-8" />,
+      icon: <Currency className="w-8 h-8" />,
       title: "NPR Currency Support",
       description: "Built specifically for Nepal with native Nepali Rupee support and local market integration."
     }
@@ -195,7 +196,6 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-md fixed top-0 w-full z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -226,7 +226,7 @@ const LandingPage: React.FC = () => {
               </div>
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight animate-slideInLeft animation-delay-200">
                 Master Your Finances with{' '}
-                <span className="text-blue-600">Smart Tracking</span>
+                <span className="text-blue-600">FinFlow</span>
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed animate-slideInLeft animation-delay-400">
                 Track expenses, achieve goals, and invest wisely with AI-powered recommendations from NEPSE. 

@@ -101,7 +101,6 @@ const GoalList: React.FC<GoalListProps> = ({ onGoalSelect }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Financial Goals</h2>
         <button
@@ -112,20 +111,17 @@ const GoalList: React.FC<GoalListProps> = ({ onGoalSelect }) => {
         </button>
       </div>
 
-      {/* Goal Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        
             <GoalForm
               goal={editingGoal}
+              isOpen={true}
               onSubmit={handleFormSubmit}
               onCancel={handleFormCancel}
             />
-          </div>
-        </div>
+         
       )}
 
-      {/* Goals List */}
       {goals.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg mb-4">No goals yet</div>

@@ -34,7 +34,6 @@ const CompleteGoalModal: React.FC<CompleteGoalModalProps> = ({
       setAccounts(activeAccounts);
     } catch (error) {
      toast.error("Failed to load accounts.");
-      // Use fallback mock data if API fails
       setAccounts([
         { id: '1', name: 'Primary Checking Account', type: 'Bank', bankName: 'Nepal Bank' },
         { id: '2', name: 'Savings Account', type: 'Bank', bankName: 'Rastriya Banijya Bank' },
@@ -44,8 +43,6 @@ const CompleteGoalModal: React.FC<CompleteGoalModalProps> = ({
     }
   };
 
-  // Mock accounts - in real implementation, fetch from API
-  //I am getting accounts.filter is not a function
   const bankAccounts = Array.isArray(accounts) ? accounts.filter(acc => acc.type === 'Bank') : [];
 
   const otherAccounts = Array.isArray(accounts) ? accounts.filter(acc => acc.type !== 'Bank') : [];

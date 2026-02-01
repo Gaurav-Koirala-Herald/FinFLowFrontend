@@ -2,8 +2,7 @@
 
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
-import { LayoutDashboard, LogOut, Menu, X, User, DollarSign, Globe, MessageCircle, Goal, BarChart3 } from "lucide-react"
-import { useState } from "react"
+import { LayoutDashboard, LogOut, User, DollarSign, Globe, MessageCircle, Goal, BarChart3 } from "lucide-react"
 import Footer from "./Footer"
 import { Toaster } from "./ui/sonner"
 
@@ -11,7 +10,6 @@ export default function Layout() {
   const { user, logout, hasPrivilege } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -32,33 +30,12 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-secondary/30 flex">
-      {/* Sidebar Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-          }`}
-      >
-        {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-border flex-shrink-0">
+      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col">
+        <div className="h-16 flex items-center justify-center px-6 border-b border-border flex-shrink-0">
           <h1 className="text-xl font-bold text-primary">Fin Flow</h1>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 rounded-md hover:bg-secondary"
-          >
-            <X size={20} />
-          </button>
         </div>
 
-        {/* Scrollable Navigation Area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Navigation */}
           <nav className="px-4 py-6 space-y-1">
             {filteredNavItems.map((item) => {
               const Icon = item.icon
@@ -67,7 +44,6 @@ export default function Layout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors ${isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -79,7 +55,6 @@ export default function Layout() {
               )
             })}
           </nav>
-
 
           <div className="px-4 py-4 mt-4">
             <div className="mb-3 px-4 py-2 text-sm text-muted-foreground truncate">
@@ -96,23 +71,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Mobile Header */}
-        <header className="lg:hidden bg-card border-b border-border sticky top-0 z-30">
-          <div className="flex items-center justify-between h-16 px-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-md hover:bg-secondary"
-            >
-              <Menu size={24} />
-            </button>
-            <h1 className="text-xl font-bold text-primary">Fin Flow</h1>
-            <div className="w-10" /> {/* Spacer for centering */}
-          </div>
-        </header>
-
-        {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen ml-64">
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Outlet />
         </main>

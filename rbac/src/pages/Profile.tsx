@@ -6,12 +6,11 @@ import { userService } from '../services/userService';
 import { useAuth } from '../contexts/AuthContext';
 import { accountsService, type AccountDTO } from '../services/accountsService';
 import AccountCard from '../components/AccountCard';
-// import ReportGeneration from '../components/ReportGeneration';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [accounts, setUserAccounts] = useState<AccountDTO[]>();
+  const [accounts, setUserAccounts] = useState<AccountDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -215,9 +214,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Profile Information */}
           <div className="space-y-6 max-w-2xl mx-auto">
-            {/* Username */}
             <div className={`transition-all duration-500 delay-200 ${
               loaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'
             }`}>
@@ -262,7 +259,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className={`mt-8 flex gap-3 justify-center transition-all duration-500 delay-400 ${
             loaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}>
@@ -295,22 +291,20 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Accounts Section */}
-        <div
+        {/* <div
           ref={accountsRef}
-          className={`transition-all duration-700 delay-500 ${
-            loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+          className={`bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 ${
+            loaded ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'
           }`}
-          style={{ transform: `translateY(${loaded ? -accountsParallax * 0.2 : 48}px)` }}
+          style={{ transform: `translateY(${loaded ? -headerParallax * 0.1 : -48}px)` }}
         >
           <AccountCard 
             data={accounts}
             userId={user!.userId}
             onUpdate={loadAccounts}
           />
-        </div>
+        </div> */}
 
-        {/* Reports Section */}
         <div
           ref={reportsRef}
           className={`transition-all duration-700 delay-600 ${
@@ -318,7 +312,7 @@ export default function ProfilePage() {
           }`}
           style={{ transform: `translateY(${loaded ? -reportsParallax * 0.25 : 48}px)` }}
         >
-          {/* <ReportGeneration userId={user!.userId} /> */}
+         
         </div>
 
         {/* Footer */}
