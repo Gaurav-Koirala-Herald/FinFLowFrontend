@@ -438,6 +438,14 @@ const DataExporter = () => {
     const incomeChangePercent = summary1.totalIncome !== 0 ? ((incomeChange / summary1.totalIncome) * 100).toFixed(2) : 'N/A';
     const expenseChangePercent = summary1.totalExpenses !== 0 ? ((expenseChange / summary1.totalExpenses) * 100).toFixed(2) : 'N/A';
 
+    // Calculate max value for chart scaling
+    const maxValue = Math.max(
+      summary1.totalIncome,
+      summary2.totalIncome,
+      summary1.totalExpenses,
+      summary2.totalExpenses
+    );
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -492,6 +500,72 @@ const DataExporter = () => {
             .change-item p:last-child { color: #666; font-size: 11px; margin: 0; }
             .positive { color: #16a34a; }
             .negative { color: #dc2626; }
+            
+            /* Chart styles */
+            .chart-container {
+              background-color: #f9fafb;
+              padding: 20px;
+              border-radius: 8px;
+              margin-bottom: 30px;
+            }
+            .chart-container h3 { color: #1e40af; margin: 0 0 20px 0; }
+            .chart {
+              display: grid;
+              grid-template-columns: 100px 1fr;
+              gap: 10px;
+              align-items: center;
+            }
+            .chart-label {
+              font-size: 12px;
+              color: #666;
+              text-align: right;
+              padding-right: 10px;
+            }
+            .chart-bars {
+              display: flex;
+              gap: 10px;
+              align-items: center;
+            }
+            .chart-bar-wrapper {
+              flex: 1;
+              display: flex;
+              gap: 5px;
+            }
+            .chart-bar {
+              height: 30px;
+              border-radius: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: flex-end;
+              padding-right: 8px;
+              color: white;
+              font-size: 11px;
+              font-weight: bold;
+              transition: all 0.3s;
+            }
+            .bar-period1 { background-color: #2563eb; }
+            .bar-period2 { background-color: #16a34a; }
+            .chart-legend {
+              display: flex;
+              gap: 20px;
+              justify-content: center;
+              margin-top: 15px;
+              padding-top: 15px;
+              border-top: 1px solid #ddd;
+            }
+            .legend-item {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 12px;
+              color: #666;
+            }
+            .legend-color {
+              width: 20px;
+              height: 20px;
+              border-radius: 4px;
+            }
+            
             table { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 30px; page-break-inside: avoid; }
             thead tr { background-color: #2563eb; color: white; }
             thead.period2-header tr { background-color: #16a34a; }
@@ -502,7 +576,7 @@ const DataExporter = () => {
             h2 { color: #1e40af; margin: 30px 0 15px 0; }
             @media print {
               body { padding: 20px; }
-              .period-grid, .change-grid { break-inside: avoid; }
+              .period-grid, .change-grid, .chart-container { break-inside: avoid; }
             }
           </style>
         </head>
@@ -542,6 +616,45 @@ const DataExporter = () => {
               <div class="summary-item">
                 <p>Net Balance</p>
                 <p class="balance">NPR ${summary2.netBalance.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <h3>Visual Comparison</h3>
+            <div class="chart">
+              <div class="chart-label">Income</div>
+              <div class="chart-bars">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-bar bar-period1" style="width: ${(summary1.totalIncome / maxValue) * 100}%;">
+                    ${summary1.totalIncome > 0 ? summary1.totalIncome.toLocaleString() : ''}
+                  </div>
+                  <div class="chart-bar bar-period2" style="width: ${(summary2.totalIncome / maxValue) * 100}%;">
+                    ${summary2.totalIncome > 0 ? summary2.totalIncome.toLocaleString() : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div class="chart-label">Expenses</div>
+              <div class="chart-bars">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-bar bar-period1" style="width: ${(summary1.totalExpenses / maxValue) * 100}%;">
+                    ${summary1.totalExpenses > 0 ? summary1.totalExpenses.toLocaleString() : ''}
+                  </div>
+                  <div class="chart-bar bar-period2" style="width: ${(summary2.totalExpenses / maxValue) * 100}%;">
+                    ${summary2.totalExpenses > 0 ? summary2.totalExpenses.toLocaleString() : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-color bar-period1"></div>
+                <span>Period 1</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color bar-period2"></div>
+                <span>Period 2</span>
               </div>
             </div>
           </div>

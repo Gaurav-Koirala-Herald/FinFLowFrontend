@@ -7,6 +7,7 @@ import CheckMilestoneModal from '../components/goals/CheckMilestoneModal';
 import AddMoneyModal from '../components/goals/AddMoneyModal';
 import { goalService, type Goal,type GoalProgress as GoalProgressTypes } from '../services/goalService';
 import { CreditCard, PiggyBank, TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Goals: React.FC = () => {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -71,14 +72,14 @@ const Goals: React.FC = () => {
       const updatedGoal = await goalService.getGoalsById(selectedGoal.id);
       setSelectedGoal(updatedGoal);
 
-      alert(`Goal completed successfully using ${accountType}!`);
+      toast.success('Goal completed successfully!');
     } catch (error) {
       console.error('Error completing goal:', error);
-      alert('Failed to complete goal. Please try again.');
+      toast.error('Failed to complete goal. Please try again.');
     }
   };
 
-  const handleAddMoney = async (amount: number, accountType: string, accountId?: string) => {
+  const handleAddMoney = async (amount: number) => {
     if (!selectedGoal) return;
     
     try {
@@ -97,14 +98,14 @@ const Goals: React.FC = () => {
       const updatedGoal = await goalService.getGoalsById(selectedGoal.id);
       setSelectedGoal(updatedGoal);
 
-      alert(`Successfully added ${new Intl.NumberFormat('en-NP', {
+      toast.success(`Successfully added ${new Intl.NumberFormat('en-NP', {
         style: 'currency',
         currency: 'NPR',
         minimumFractionDigits: 0,
-      }).format(amount)} to your goal using ${accountType}!`);
+      }).format(amount)} to your goal!`);
     } catch (error) {
       console.error('Error adding money to goal:', error);
-      alert('Failed to add money to goal. Please try again.');
+      toast.error('Failed to add money to goal. Please try again.');
     }
   };
 
