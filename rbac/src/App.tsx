@@ -13,6 +13,7 @@ import FinancialForum from "./pages/FinancialForums"
 import LandingPage from "./pages/LandingPage"
 import Goals from "./pages/Goals"
 import Reports from "./pages/Report"
+import VerifyOtp from "./pages/VerifyOtp"
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth()
@@ -28,7 +29,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
-
+      <Route
+        path="/verify-otp"
+        element={<VerifyOtp />}
+      />
       <Route path="/" element={<LandingPage />} />
       <Route element={<Layout />}>
         <Route
@@ -39,6 +43,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         {/* <Route
           path="/users"
           element={
@@ -67,19 +72,19 @@ export default function App() {
           path="/goals"
           element={
             <ProtectedRoute>
-              <Goals /> 
+              <Goals />
             </ProtectedRoute>
           }
         />
         <Route
-        path ="/reports"
-        element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        }
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
         />
-         <Route
+        <Route
           path="/transactions"
           element={
             <ProtectedRoute>
@@ -87,7 +92,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/nepse"
           element={
             <ProtectedRoute>
@@ -99,12 +104,12 @@ export default function App() {
           <ProtectedRoute>
             <FinancialForum />
           </ProtectedRoute>
-        } />  
+        } />
       </Route>
 
       <Route path="/" element={<Navigate to="/" />} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
-      
+
     </Routes>
   )
 }

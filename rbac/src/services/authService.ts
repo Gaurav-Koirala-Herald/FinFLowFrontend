@@ -13,9 +13,15 @@ export const authService = {
     email: string
     password: string
     fullName: string
-    roleIds: number[]
   }) {
     const response = await api.post("/Auth/register", data)
+    return response.data
+  },
+  async verifyOtp(data:{
+    email:string
+    otp:string
+  }) {
+    const response = await api.post("/Auth/verify-otp", data)
     return response.data
   },
 
