@@ -26,7 +26,7 @@ export const authService = {
   },
 
   async resendOtp(email:string) {
-    const response = await api.post("/Auth/resend-otp", {email})
+    const response = await api.post(`/Auth/resend-otp?email=${email}`)
     return response.data
   },
 
