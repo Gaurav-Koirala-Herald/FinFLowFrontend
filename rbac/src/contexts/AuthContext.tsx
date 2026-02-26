@@ -1,8 +1,8 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useState, useEffect } from "react"
 import { authService } from "../services/authService"
+import { useNavigate } from "react-router-dom"
 
 interface User {
   userId: number
@@ -17,6 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   loading: boolean
   login: (username: string, password: string) => Promise<void>
+  verifyOtp: (email: string, otp: string) => Promise<void>
   logout: () => void
   hasPrivilege: (privilege: string) => boolean
   hasFunction: (functionCode: string) => boolean
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const initAuth = async () => {
@@ -36,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await authService.getCurrentUser()
           setUser(userData)
-        } catch (error) {
+        } catch {
           localStorage.removeItem("token")
         }
       }
@@ -48,27 +50,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string) => {
     const response = await authService.login(username, password)
-    localStorage.setItem("token", response.token)
-    const userData = await authService.getCurrentUser()
-    setUser(userData)
+
+    navigate("/verify-otp", {
+      state: {
+        email: response.email,
+      },
+    })
+  }
+  const verifyOtp = async (email: string, otp: string) => {
+    const response = await authService.verifyOtp({ email, otp })
+
+    if (response.code === "OK") {
+      localStorage.setItem("token", response.token)
+
+      const userData = await authService.getCurrentUser()
+      setUser(userData)
+
+      navigate("/dashboard")
+    } else {
+      throw new Error(response.message || "OTP verification failed")
+    }
   }
 
   const logout = () => {
     localStorage.removeItem("token")
     setUser(null)
+    navigate("/login")
   }
 
-  const hasPrivilege = (privilege: string) => {
-    return user?.privileges.includes(privilege) ?? false
-  }
+  const hasPrivilege = (privilege: string) =>
+    user?.privileges.includes(privilege) ?? false
 
-  const hasFunction = (functionCode: string) => {
-    return user?.functions.includes(functionCode) ?? false
-  }
+  const hasFunction = (functionCode: string) =>
+    user?.functions.includes(functionCode) ?? false
 
-  const hasRole = (role: string) => {
-    return user?.roles.includes(role) ?? false
-  }
+  const hasRole = (role: string) =>
+    user?.roles.includes(role) ?? false
 
   return (
     <AuthContext.Provider
@@ -77,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         loading,
         login,
+        verifyOtp,
         logout,
         hasPrivilege,
         hasFunction,

@@ -57,7 +57,7 @@ const LandingPage: React.FC = () => {
   const sectionRefs = useRef<SectionRefs>({});
     const navigate = useNavigate();
     const handleSignUpClick = () => {
-    navigate("/login");
+    navigate("/login",{state:{setActiveTab:"register"}});
     };
   useEffect(() => {
     const handleScroll = (): void => {
@@ -214,7 +214,7 @@ const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
+
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-blue-50 overflow-hidden">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -302,7 +302,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Benefits Section */}
       <section 
         id="benefits" 
         ref={(el) => {
@@ -341,7 +340,6 @@ const LandingPage: React.FC = () => {
             ))}
           </div>
           
-          {/* NEPSE Integration Highlight */}
           <div className={`bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white transition-all duration-1000 ${
             isVisible['benefits'] ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}>

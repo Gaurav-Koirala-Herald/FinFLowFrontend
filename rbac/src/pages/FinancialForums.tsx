@@ -21,10 +21,6 @@ export default function FinancialForum() {
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [loadingComments, setLoadingComments] = useState<Set<number>>(new Set());
 
-  const popularTopics = [
-    '#investing', '#budgeting', '#stocks', '#sidehustles',
-    '#crypto', '#personalfinance', '#retirement', '#taxes'
-  ];
 
   const guidelines = [
     'Be respectful and constructive',
@@ -296,20 +292,6 @@ export default function FinancialForum() {
           <p className="text-gray-600 mb-6">
             Connect with our community to discuss financial strategies, share insights, and get advice from peers.
           </p>
-          <div className="flex gap-3 text-sm flex-wrap">
-            {popularTopics.slice(0, 6).map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTopic(selectedTopic === tag ? null : tag)}
-                className={`px-4 py-2 rounded-lg text-gray-700 border shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 ${selectedTopic === tag
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-blue-500'
-                    : 'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 border-gray-200 hover:border-blue-300'
-                  }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -487,26 +469,7 @@ export default function FinancialForum() {
             )}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-500">
-              <h3 className="font-bold text-gray-900 mb-3">Popular Topics</h3>
-              <p className="text-xs text-gray-500 mb-4">Trending discussions in finance</p>
-              <div className="flex flex-wrap gap-2">
-                {popularTopics.map((topic, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedTopic(selectedTopic === topic ? null : topic)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-300 hover:scale-105 shadow-sm ${selectedTopic === topic
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-blue-500'
-                        : 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 hover:from-blue-50 hover:to-purple-50 border-gray-200 hover:border-blue-300'
-                      }`}
-                  >
-                    {topic}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-500">
               <h3 className="font-bold text-gray-900 mb-4">Community Guidelines</h3>
@@ -564,15 +527,6 @@ export default function FinancialForum() {
                 rows={6}
                 value={newPost.content}
                 onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                disabled={isSubmitting}
-              />
-
-              <input
-                type="text"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 shadow-sm"
-                placeholder="e.g., investing, budgeting, stocks"
-                value={newPost.tags}
-                onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
                 disabled={isSubmitting}
               />
             </div>

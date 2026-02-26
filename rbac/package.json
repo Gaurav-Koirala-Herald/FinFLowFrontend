@@ -28,6 +28,7 @@
     "react-router-dom": "^7.10.1",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.4",
+    "resend": "^6.9.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18"

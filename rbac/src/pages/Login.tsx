@@ -6,10 +6,11 @@ import { useNavigate } from "react-router-dom"
 import { Shield } from "lucide-react"
 import { authService } from "../services/authService"
 import { toast } from "sonner"
+import { useAuth } from "../contexts/AuthContext"
 
 export default function AuthPage() {
   const navigate = useNavigate()
-
+  const {login} = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -29,11 +30,7 @@ export default function AuthPage() {
     setLoading(true)
 
     try {
-      const response = await authService.login(username, password)
-      console.log(response)
-      navigate("/verify-otp", {
-        state: { email: response.email } 
-      })
+      await login(username, password)
     } catch (err: any) {
       setError(err.response?.data?.message || "Invalid username or password")
     } finally {
@@ -59,10 +56,12 @@ export default function AuthPage() {
         password: regPassword,
         fullName,
       })
+
       if (response)
         navigate("/verify-otp", {
-          state: { email }
+          state: { email, isLogin: false }
         })
+
       else toast.error("Registration failed. Please try again.")
       setActiveTab("login")
     } catch (err: any) {
@@ -92,8 +91,8 @@ export default function AuthPage() {
             <button
               onClick={() => setActiveTab("login")}
               className={`flex-1 py-2 text-sm font-medium ${activeTab === "login"
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted text-muted-foreground"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground"
                 }`}
             >
               Login
@@ -101,8 +100,8 @@ export default function AuthPage() {
             <button
               onClick={() => setActiveTab("register")}
               className={`flex-1 py-2 text-sm font-medium ${activeTab === "register"
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted text-muted-foreground"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground"
                 }`}
             >
               Register
@@ -115,7 +114,6 @@ export default function AuthPage() {
             </div>
           )}
 
-          {/* Login */}
           {activeTab === "login" && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
@@ -150,7 +148,6 @@ export default function AuthPage() {
             </form>
           )}
 
-          {/* Register */}
           {activeTab === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>

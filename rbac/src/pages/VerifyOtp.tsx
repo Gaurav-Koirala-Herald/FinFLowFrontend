@@ -1,44 +1,48 @@
 "use client"
 
-import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Shield } from "lucide-react"
-import { authService } from "../services/authService"
+import { useAuth } from "../contexts/AuthContext"
 import { toast } from "sonner"
 
 export default function VerifyOtp() {
     const navigate = useNavigate()
     const location = useLocation()
+    const { verifyOtp } = useAuth()
+
+    const email = location.state?.email
+
     const [otp, setOtp] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
-    const email = location.state?.email || ""
+    const [cooldown, setCooldown] = useState(30)
 
-    const handleResendOtp = async () => {
-        
-        setError("")
-        setLoading(true)
-    }
+    useEffect(() => {
+        if (!email) navigate("/login")
+    }, [email, navigate])
+
+    useEffect(() => {
+        if (cooldown === 0) return
+
+        const timer = setInterval(() => {
+            setCooldown((prev) => prev - 1)
+        }, 1000)
+
+        return () => clearInterval(timer)
+    }, [cooldown])
+
     const handleVerify = async (e: React.FormEvent) => {
         e.preventDefault()
         setError("")
         setLoading(true)
 
         try {
-            const response = await authService.verifyOtp({
-                email: email, 
-                otp,
-            })
-            if (response) {
-                toast.success("OTP verified successfully! You can now log in.")
-                navigate("/login")
-            }
-            else setError("Invalid or expired OTP")
-
+            await verifyOtp(email, otp)
+            toast.success("OTP verified successfully!")
             navigate("/dashboard")
         } catch (err: any) {
-            setError("Invalid or expired OTP")
+            setError(err.message || "Invalid OTP")
         } finally {
             setLoading(false)
         }
@@ -58,7 +62,8 @@ export default function VerifyOtp() {
                         Verify OTP
                     </h1>
                     <p className="text-center text-muted-foreground mb-6">
-                        Enter the 6-digit code sent to your email
+                        Enter the OTP sent to <br />
+                        <span className="font-medium">{email}</span>
                     </p>
 
                     {error && (
@@ -68,23 +73,15 @@ export default function VerifyOtp() {
                     )}
 
                     <form onSubmit={handleVerify} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                One-Time Password
-                            </label>
-                            <input
-                                type="text"
-                                inputMode="text"
-                                maxLength={6}
-                                value={otp}
-                                onChange={(e) =>
-                                    setOtp(e.target.value)
-                                }
-                                className="w-full text-center tracking-widest text-lg px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                                placeholder="••••••"
-                                required
-                            />
-                        </div>
+                        <input
+                            type="text"
+                            value={otp}
+                            maxLength={6}
+                            onChange={(e) => setOtp(e.target.value)}
+                            className="w-full text-center tracking-widest text-lg px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary"
+                            placeholder="••••••"
+                            required
+                        />
 
                         <button
                             type="submit"
@@ -96,10 +93,7 @@ export default function VerifyOtp() {
                     </form>
 
                     <p className="mt-6 text-center text-sm text-muted-foreground">
-                        Didn't receive the code?{" "}
-                        <button className="text-primary hover:underline cursor-pointer" onClick={handleResendOtp}>
-                            Resend OTP
-                        </button>
+                        Didn't receive the code?
                     </p>
                 </div>
             </div>
