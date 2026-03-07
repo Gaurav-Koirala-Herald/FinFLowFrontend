@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { nepseService, type NepseIndexResponse,type  StockPrice,type NepseStatus } from '../services/nepseService';
-import { TrendingUp, TrendingDown, Activity, RefreshCw } from 'lucide-react';
+import { nepseService, type NepseIndexResponse, type StockPrice, type NepseStatus } from '../services/nepseService';
+import { TrendingUp, TrendingDown, Activity, RefreshCw, Brain, Sparkles } from 'lucide-react';
 
 const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
 
@@ -99,6 +99,22 @@ export const NepseDashboard = () => {
             <p className="text-blue-100 mt-1">Nepal Stock Exchange - Real-time Market Data</p>
           </div>
           <div className="flex items-center space-x-4">
+            {/* ── AI Recommender Button ── */}
+            <a
+              href="/ai-recommender"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                boxShadow: '0 0 16px rgba(99,102,241,0.5)',
+                color: '#fff',
+                textDecoration: 'none',
+              }}
+            >
+              <Brain size={16} />
+              AI Recommender
+              <Sparkles size={13} style={{ opacity: 0.85 }} />
+            </a>
+
             <div className={`px-4 py-2 rounded-full ${marketStatus?.isOpen === 'OPEN' ? 'bg-green-500' : 'bg-red-500'}`}>
               {marketStatus?.isOpen === 'OPEN' ? 'Market Open' : 'Market Closed'}
             </div>

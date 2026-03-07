@@ -14,6 +14,7 @@ import LandingPage from "./pages/LandingPage"
 import Goals from "./pages/Goals"
 import Reports from "./pages/Report"
 import VerifyOtp from "./pages/VerifyOtp"
+import AIRecommender from "./pages/AIRecommendation"
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth()
@@ -42,6 +43,14 @@ export default function App() {
               <Dashboard />
             </ProtectedRoute>
           }
+        />
+        <Route
+        path= "/ai-recommender"
+        element={
+          <ProtectedRoute>
+            <AIRecommender />
+          </ProtectedRoute>
+        }
         />
 
         {/* <Route
