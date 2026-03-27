@@ -10,120 +10,28 @@ import {
   Sparkles,
   PlusCircle,
   X,
+  AlertCircle,
 } from "lucide-react"
+import {
+  recommendationService,
+  userService,
+  watchlistService,
+  portfolioService,
+  marketService,
+  type RecommendationDTO,
+  type UserProfileDTO,
+  type MarketSummaryDTO,
+  type UserPreferenceUpdateDTO,
+} from "../services/nepseAiService"
+import { useAuth } from "../contexts/AuthContext";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
-type RiskLevel = "Low" | "Medium" | "High"
 
-interface StockDTO {
-  symbol: string
-  securityName: string
-  sector: string
-  currentPrice: number
-  pointChange: number
-  percentageChange: number
-  priceChange30Days: number
-  peRatio: number
-  marketCap: number
-  volume: number
-  high52Week: number
-  low52Week: number
-  eps: number
-}
-
-interface RecommendationDTO {
-  id: number
-  stock: StockDTO
-  score: number
-  trendScore: number
-  fundamentalsScore: number
-  sectorScore: number
-  riskScore: number
-  popularityScore: number
-  aiExplanation: string
-  generatedAt: Date
-}
-
-interface UserProfileDTO {
-  id: string
-  name: string
-  riskLevel: RiskLevel
-  preferredSectors: string[]
-  investmentAmount: number
-  ownedStocks: string[]
-}
-
-interface MarketSummaryDTO {
-  nepseIndex: number
-  nepseChangePercent: number
-  totalTurnover: number
-  advancingStocks: number
-  decliningStocks: number
-  isMarketOpen: boolean
-}
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_USER: UserProfileDTO = {
-  id: "u1",
-  name: "Aarav Shrestha",
-  riskLevel: "Medium",
-  preferredSectors: ["Banking", "Hydropower"],
-  investmentAmount: 500000,
-  ownedStocks: ["NABIL", "CHCL"],
-}
-
-const MOCK_MARKET: MarketSummaryDTO = {
-  nepseIndex: 2187.43,
-  nepseChangePercent: 1.24,
-  totalTurnover: 4823450000,
-  advancingStocks: 134,
-  decliningStocks: 87,
-  isMarketOpen: true,
-}
-
-const MOCK_RECOMMENDATIONS: RecommendationDTO[] = [
-  {
-    id: 1,
-    stock: { symbol: "NICA", securityName: "NIC Asia Bank Ltd.", sector: "Banking", currentPrice: 512.3, pointChange: 18.4, percentageChange: 3.73, priceChange30Days: 8.2, peRatio: 14.2, marketCap: 42000000000, volume: 245000, high52Week: 580, low52Week: 390, eps: 36.1 },
-    score: 0.87, trendScore: 0.82, fundamentalsScore: 0.78, sectorScore: 1.0, riskScore: 1.0, popularityScore: 0.72,
-    aiExplanation: "NIC Asia Bank presents a compelling investment opportunity given your medium-risk profile and preference for banking stocks. The bank has demonstrated consistent earnings growth with an EPS of 36.1 and maintains a healthy P/E ratio of 14.2, suggesting it's not overvalued relative to peers. The 30-day price momentum of +8.2% indicates strong buying interest. Risk disclaimer: Stock prices can be volatile and past performance does not guarantee future results.",
-    generatedAt: new Date(),
-  },
-  {
-    id: 2,
-    stock: { symbol: "UPPER", securityName: "Upper Tamakoshi Hydropower Ltd.", sector: "Hydropower", currentPrice: 278.5, pointChange: 6.2, percentageChange: 2.28, priceChange30Days: 5.4, peRatio: 18.7, marketCap: 38000000000, volume: 189000, high52Week: 320, low52Week: 210, eps: 14.9 },
-    score: 0.81, trendScore: 0.68, fundamentalsScore: 0.71, sectorScore: 1.0, riskScore: 0.9, popularityScore: 0.65,
-    aiExplanation: "Upper Tamakoshi aligns well with your sector preference for hydropower. As Nepal's largest hydropower project, it benefits from long-term power purchase agreements ensuring stable revenue. The current price offers a reasonable entry point below its 52-week high. Risk disclaimer: Hydropower stocks can be affected by seasonal variations, regulatory changes, and water level fluctuations.",
-    generatedAt: new Date(),
-  },
-  {
-    id: 3,
-    stock: { symbol: "NIFRA", securityName: "Nepal Infrastructure Bank", sector: "Development Bank", currentPrice: 98.7, pointChange: 3.1, percentageChange: 3.24, priceChange30Days: 11.3, peRatio: 11.4, marketCap: 8500000000, volume: 312000, high52Week: 115, low52Week: 72, eps: 8.66 },
-    score: 0.76, trendScore: 0.91, fundamentalsScore: 0.85, sectorScore: 0.3, riskScore: 0.5, popularityScore: 0.88,
-    aiExplanation: "Nepal Infrastructure Bank shows exceptionally strong momentum with an 11.3% price gain over 30 days. The low P/E of 11.4 suggests potential undervaluation. However, it falls outside your preferred sectors — consider this as a diversification opportunity. Risk disclaimer: Development banks carry higher credit and liquidity risks compared to commercial banks.",
-    generatedAt: new Date(),
-  },
-  {
-    id: 4,
-    stock: { symbol: "SHIVM", securityName: "Shiva Shree Hydropower Ltd.", sector: "Hydropower", currentPrice: 215.0, pointChange: -4.5, percentageChange: -2.05, priceChange30Days: -3.1, peRatio: 22.1, marketCap: 4200000000, volume: 98000, high52Week: 265, low52Week: 180, eps: 9.72 },
-    score: 0.71, trendScore: 0.42, fundamentalsScore: 0.62, sectorScore: 1.0, riskScore: 0.5, popularityScore: 0.41,
-    aiExplanation: "While Shiva Shree is experiencing short-term price weakness, the underlying fundamentals remain intact for a medium-term recovery. The short-term dip could present a buying opportunity if you're comfortable with a 3–6 month horizon. Risk disclaimer: Smaller hydropower companies face execution and grid connectivity risks.",
-    generatedAt: new Date(),
-  },
-  {
-    id: 5,
-    stock: { symbol: "GBIME", securityName: "Global IME Bank Ltd.", sector: "Banking", currentPrice: 376.8, pointChange: 9.8, percentageChange: 2.67, priceChange30Days: 6.7, peRatio: 16.3, marketCap: 56000000000, volume: 421000, high52Week: 420, low52Week: 285, eps: 23.1 },
-    score: 0.83, trendScore: 0.75, fundamentalsScore: 0.74, sectorScore: 1.0, riskScore: 1.0, popularityScore: 0.94,
-    aiExplanation: "Global IME Bank is one of Nepal's largest commercial banks with a strong branch network and consistently growing deposits. At a P/E of 16.3, it is fairly valued and aligns with your medium-risk, banking-sector preference. Risk disclaimer: Banking stocks are sensitive to interest rate policy changes from Nepal Rastra Bank.",
-    generatedAt: new Date(),
-  },
+const SECTORS = [
+  "Banking", "Hydropower", "Insurance", "Finance",
+  "Manufacturing", "Development Bank", "Microfinance",
 ]
 
-const SECTORS = ["Banking", "Hydropower", "Insurance", "Finance", "Manufacturing", "Development Bank", "Microfinance"]
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n: number) => n.toLocaleString("en-NP")
 const fmtM = (n: number) => n >= 1e9 ? `₨${(n / 1e9).toFixed(2)}B` : `₨${(n / 1e6).toFixed(1)}M`
@@ -131,7 +39,6 @@ const scoreColor = (s: number) => s >= 0.8 ? "#16a34a" : s >= 0.65 ? "#d97706" :
 const scoreBg = (s: number) => s >= 0.8 ? "#dcfce7" : s >= 0.65 ? "#fef3c7" : "#fee2e2"
 const scoreLabel = (s: number) => s >= 0.8 ? "Strong Buy" : s >= 0.65 ? "Buy" : "Watch"
 
-// ─── ScoreBar (light theme) ───────────────────────────────────────────────────
 
 const ScoreBar = ({ label, value, color }: { label: string; value: number; color: string }) => (
   <div className="mb-3">
@@ -140,57 +47,295 @@ const ScoreBar = ({ label, value, color }: { label: string; value: number; color
       <span className="text-xs font-bold" style={{ color }}>{(value * 100).toFixed(0)}%</span>
     </div>
     <div className="h-1.5 bg-gray-200 rounded-full">
-      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${value * 100}%`, background: color }} />
+      <div
+        className="h-full rounded-full transition-all duration-700"
+        style={{ width: `${value * 100}%`, background: color }}
+      />
     </div>
   </div>
 )
 
-// ─── RiskBadge (light theme) ──────────────────────────────────────────────────
-
-const RiskBadge = ({ level }: { level: RiskLevel }) => {
-  const cfg = {
+const RiskBadge = ({ level }: { level: string }) => {
+  const cfg: Record<string, { bg: string; text: string; label: string }> = {
     Low: { bg: "bg-green-100", text: "text-green-700", label: "Low Risk" },
     Medium: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Medium Risk" },
     High: { bg: "bg-red-100", text: "text-red-700", label: "High Risk" },
-  }[level]
+  }
+  const c = cfg[level] ?? cfg.Medium
   return (
-    <span className={`${cfg.bg} ${cfg.text} text-xs font-bold px-3 py-1 rounded-full`}>
-      {cfg.label}
+    <span className={`${c.bg} ${c.text} text-xs font-bold px-3 py-1 rounded-full`}>
+      {c.label}
     </span>
+  )
+}
+
+const ErrorBanner = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
+  <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700">
+    <AlertCircle size={16} />
+    <span className="text-sm flex-1">{message}</span>
+    <button
+      onClick={onRetry}
+      className="text-xs font-semibold underline hover:no-underline"
+    >
+      Retry
+    </button>
+  </div>
+)
+
+
+interface PortfolioModalProps {
+  symbol: string
+  currentPrice: number
+  onConfirm: (quantity: number, buyPrice: number) => void
+  onClose: () => void
+}
+
+const PortfolioModal = ({ symbol, currentPrice, onConfirm, onClose }: PortfolioModalProps) => {
+  const [quantity, setQuantity] = useState(1)
+  const [buyPrice, setBuyPrice] = useState(currentPrice)
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl border border-gray-200 p-6 w-full max-w-sm mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-base font-bold text-gray-900">Add {symbol} to Portfolio</h4>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
+            <X size={16} className="text-gray-500" />
+          </button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Quantity</label>
+            <input
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Buy Price (₨)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={buyPrice}
+              onChange={(e) => setBuyPrice(Number(e.target.value))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
+            Total: <span className="font-bold text-gray-900">₨{fmt(quantity * buyPrice)}</span>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-5">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-gray-300 text-gray-600 text-sm font-semibold hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(quantity, buyPrice)}
+            className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AIRecommender() {
-  const [user] = useState<UserProfileDTO>(MOCK_USER)
-  const [market] = useState<MarketSummaryDTO>(MOCK_MARKET)
-  const [recs, setRecs] = useState<RecommendationDTO[]>(MOCK_RECOMMENDATIONS)
+  const { user : currentUser } = useAuth();
+  const CURRENT_USER_ID = currentUser?.userId || 0
+  const userId = CURRENT_USER_ID
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  const [user, setUser] = useState<UserProfileDTO | null>(null)
+  const [market, setMarket] = useState<MarketSummaryDTO | null>(null)
+  const [recs, setRecs] = useState<RecommendationDTO[]>([])
   const [selected, setSelected] = useState<RecommendationDTO | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [aiLoading, setAiLoading] = useState(false)
-  const [watchlist, setWatchlist] = useState<string[]>(["UPPER"])
+  const [watchlist, setWatchlist] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState<"recommendations" | "profile">("recommendations")
-  const [prefSectors, setPrefSectors] = useState<string[]>(user.preferredSectors)
-  const [riskLevel, setRiskLevel] = useState<RiskLevel>(user.riskLevel)
+  const [prefSectors, setPrefSectors] = useState<string[]>([])
+  const [riskLevel, setRiskLevel] = useState<"Low" | "Medium" | "High">("Medium")
+  const [portfolioModal, setPortfolioModal] = useState<RecommendationDTO | null>(null)
+
+  // Loading states
+  const [loadingInit, setLoadingInit] = useState(true)
+  const [loadingRecs, setLoadingRecs] = useState(false)
+  const [loadingRefresh, setLoadingRefresh] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [togglingWatch, setTogglingWatch] = useState<string | null>(null)
+  const [addingPortfolio, setAddingPortfolio] = useState(false)
+
+  // Error state
+  const [error, setError] = useState<string | null>(null)
+
+  // ── Initial load ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    const init = async () => {
+      setLoadingInit(true)
+      setError(null)
+      try {
+        const [profileData, marketData] = await Promise.all([
+          userService.getProfile(userId.toString()),
+          marketService.getMarketSummary(),
+        ])
+        setUser(profileData)
+        setMarket(marketData)
+        setPrefSectors(profileData.preferredSectors)
+        setRiskLevel(profileData.riskLevel)
+
+        const watchlistData = await watchlistService.getWatchlist(userId.toString())
+        setWatchlist(watchlistData.map((w) => w.symbol))
+
+        setLoadingRecs(true)
+        const recsData = await recommendationService.getRecommendations(userId.toString())
+
+        if (recsData && recsData.length > 0) {
+          setRecs(recsData)
+        } else {
+          const fresh = await recommendationService.generateRecommendations({
+            userId: userId.toString(),
+            refreshExplanation: false,
+          })
+          setRecs(fresh ?? [])
+        }
+      } catch (err) {
+        setError("Failed to load data. Please check your connection and try again.")
+        console.error(err)
+      } finally {
+        setLoadingInit(false)
+        setLoadingRecs(false)
+      }
+    }
+    init()
+  }, [userId])
 
   const handleRefresh = useCallback(async () => {
-    setLoading(true)
-    setAiLoading(true)
-    await new Promise((r) => setTimeout(r, 2200))
-    setLoading(false)
-    setAiLoading(false)
-    setRecs([...MOCK_RECOMMENDATIONS].sort(() => Math.random() - 0.3))
-  }, [])
+    setLoadingRefresh(true)
+    setLoadingRecs(true)
+    setError(null)
+    setSelected(null)
+    try {
+      const [fresh, marketData] = await Promise.all([
+        recommendationService.refreshRecommendations(userId.toString()),
+        marketService.getMarketSummary(),
+      ])
+      setRecs(fresh ?? [])
+      setMarket(marketData)
+    } catch (err) {
+      setError("Failed to refresh recommendations. Please try again.")
+      console.error(err)
+    } finally {
+      setLoadingRefresh(false)
+      setLoadingRecs(false)
+    }
+  }, [userId])
 
-  const toggleWatchlist = (symbol: string) => {
-    setWatchlist((w) => w.includes(symbol) ? w.filter((s) => s !== symbol) : [...w, symbol])
+  const toggleWatchlist = async (symbol: string) => {
+    setTogglingWatch(symbol)
+    setError(null)
+    try {
+      if (watchlist.includes(symbol)) {
+        await watchlistService.removeFromWatchlist(userId.toString(), symbol)
+        setWatchlist((w) => w.filter((s) => s !== symbol))
+      } else {
+        await watchlistService.addToWatchlist(userId.toString(), { symbol })
+        setWatchlist((w) => [...w, symbol])
+      }
+    } catch (err) {
+      setError(`Failed to update watchlist for ${symbol}.`)
+      console.error(err)
+    } finally {
+      setTogglingWatch(null)
+    }
+  }
+
+  const handleAddPortfolio = async (quantity: number, buyPrice: number) => {
+    if (!portfolioModal) return
+    setAddingPortfolio(true)
+    setError(null)
+    try {
+      await portfolioService.addToPortfolio(userId.toString(), {
+        symbol: portfolioModal.symbol,
+        quantity,
+        buyPrice,
+      })
+      setPortfolioModal(null)
+    } catch (err) {
+      setError(`Failed to add ${portfolioModal.symbol} to portfolio.`)
+      console.error(err)
+    } finally {
+      setAddingPortfolio(false)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true)
+    setError(null)
+    try {
+      const dto: UserPreferenceUpdateDTO = {
+        riskLevel: riskLevel,
+        preferredSectors: prefSectors,
+        investmentAmount: user?.investmentAmount ?? 0,
+        ownedStocks: user?.ownedStocks ?? [],
+      }
+      await userService.updatePreferences(userId.toString(), dto)
+      setUser((u) => u ? { ...u, riskLevel, preferredSectors: prefSectors } : u)
+      await handleRefresh()
+    } catch (err) {
+      setError("Failed to save preferences. Please try again.")
+      console.error(err)
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  if (loadingInit) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="flex items-center gap-2">
+              <Brain size={28} />
+              <h1 className="text-3xl font-bold">AI Stock Recommender</h1>
+            </div>
+            <p className="text-blue-100 mt-1">Personalized picks powered by Gemini AI</p>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md p-6 border border-gray-200 animate-pulse">
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3" />
+                <div className="h-7 bg-gray-200 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-200 rounded w-1/3" />
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-center h-48">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+                <Brain size={18} className="text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </div>
+              <p className="text-gray-500 text-sm">Loading AI recommendations...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* ── Header — matches NepseDashboard exactly ── */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
@@ -198,31 +343,40 @@ export default function AIRecommender() {
               <Brain size={28} />
               <h1 className="text-3xl font-bold">AI Stock Recommender</h1>
             </div>
-            <p className="text-blue-100 mt-1">Personalized picks powered by Gemini AI</p>
+            <p className="text-blue-100 mt-1">
+              Personalized picks powered by Gemini AI
+              {user && <span className="ml-2 opacity-75">· {user.name}</span>}
+            </p>
           </div>
           <div className="flex items-center space-x-4">
-            {/* Tab switcher */}
             <div className="flex bg-blue-700 rounded-lg p-1">
               {(["recommendations", "profile"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                    activeTab === tab ? "bg-white text-blue-700" : "text-blue-100 hover:text-white"
-                  }`}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${activeTab === tab
+                      ? "bg-white text-blue-700"
+                      : "text-blue-100 hover:text-white"
+                    }`}
                 >
                   {tab === "recommendations" ? "AI Picks" : "My Profile"}
                 </button>
               ))}
             </div>
-            <div className={`px-4 py-2 rounded-full text-sm font-semibold ${market.isMarketOpen ? "bg-green-500" : "bg-red-500"}`}>
-              {market.isMarketOpen ? "Market Open" : "Market Closed"}
+            <div className={`px-4 py-2 rounded-full text-sm font-semibold ${market?.isMarketOpen ? "bg-green-500" : "bg-red-500"
+              }`}>
+              {market?.isMarketOpen ? "Market Open" : "Market Closed"}
             </div>
             <button
               onClick={handleRefresh}
-              className="p-2 bg-blue-700 rounded-lg hover:bg-blue-600 transition"
+              disabled={loadingRefresh}
+              className="p-2 bg-blue-700 rounded-lg hover:bg-blue-600 transition disabled:opacity-60"
+              title="Refresh recommendations"
             >
-              <RefreshCw size={20} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+              <RefreshCw
+                size={20}
+                style={{ animation: loadingRefresh ? "spin 1s linear infinite" : "none" }}
+              />
             </button>
           </div>
         </div>
@@ -230,13 +384,34 @@ export default function AIRecommender() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
-        {/* ── Market Stat Cards — same style as NepseDashboard StatCard ── */}
+        {error && <ErrorBanner message={error} onRetry={handleRefresh} />}
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
-            { title: "NEPSE Index", value: fmt(market.nepseIndex), change: market.nepseChangePercent },
-            { title: "Total Turnover", value: fmtM(market.totalTurnover), change: 0.8 },
-            { title: "Advancing", value: market.advancingStocks, change: 1 },
-            { title: "Declining", value: market.decliningStocks, change: -1 },
+            {
+              title: "NEPSE Index",
+              value: market ? fmt(market.nepseIndex) : "—",
+              change: market?.nepseChangePercent ?? 0,
+              label: market ? `${market.nepseChangePercent >= 0 ? "+" : ""}${market.nepseChangePercent.toFixed(2)}%` : "—",
+            },
+            {
+              title: "Total Turnover",
+              value: market ? fmtM(market.totalTurnover) : "—",
+              change: 1,
+              label: "Today",
+            },
+            {
+              title: "Advancing",
+              value: market?.advancingStocks ?? "—",
+              change: 1,
+              label: "stocks up",
+            },
+            {
+              title: "Declining",
+              value: market?.decliningStocks ?? "—",
+              change: -1,
+              label: "stocks down",
+            },
           ].map((stat) => (
             <div key={stat.title} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
               <div className="flex justify-between items-center">
@@ -245,9 +420,7 @@ export default function AIRecommender() {
                   <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
                   <div className={`flex items-center mt-2 ${stat.change >= 0 ? "text-green-600" : "text-red-600"}`}>
                     {stat.change >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                    <span className="ml-1 text-sm font-semibold">
-                      {stat.title === "NEPSE Index" ? `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(2)}%` : stat.change >= 0 ? "Up today" : "Down today"}
-                    </span>
+                    <span className="ml-1 text-sm font-semibold">{stat.label}</span>
                   </div>
                 </div>
                 <div className={`p-3 rounded-full ${stat.change >= 0 ? "bg-green-100" : "bg-red-100"}`}>
@@ -258,138 +431,160 @@ export default function AIRecommender() {
           ))}
         </div>
 
-        {aiLoading ? (
+        {loadingRecs ? (
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
                 <Brain size={18} className="text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
-              <p className="text-gray-500 text-sm">Analyzing market data with AI...</p>
+              <p className="text-gray-500 text-sm">
+                {loadingRefresh ? "Regenerating AI recommendations..." : "Loading recommendations..."}
+              </p>
             </div>
           </div>
+
         ) : activeTab === "recommendations" ? (
 
           <div className={`grid gap-6 ${selected ? "grid-cols-1 lg:grid-cols-[1fr_400px]" : "grid-cols-1"}`}>
 
-            {/* ── Recommendations List ── */}
             <div>
-              {/* Sub-header */}
               <div className="flex items-center gap-3 mb-4 flex-wrap">
                 <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
                   <Sparkles size={13} className="text-blue-600" />
-                  <span className="text-xs font-semibold text-blue-700">AI Picks for {user.name}</span>
+                  <span className="text-xs font-semibold text-blue-700">
+                    AI Picks for {user?.name ?? "You"}
+                  </span>
                 </div>
-                <RiskBadge level={user.riskLevel} />
-                <span className="text-xs text-gray-500">Sectors: {user.preferredSectors.join(", ")}</span>
+                {user && <RiskBadge level={user.riskLevel} />}
+                {user && (
+                  <span className="text-xs text-gray-500">
+                    Sectors: {user.preferredSectors.join(", ")}
+                  </span>
+                )}
               </div>
 
-              {/* Table card — same style as StockTable */}
               <div className="bg-white rounded-lg shadow-md border border-gray-200">
                 <div className="p-6 border-b border-gray-100">
                   <h3 className="text-lg font-bold text-gray-900">Top AI Recommendations</h3>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">#</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Symbol</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Name</th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">LTP</th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Change</th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">AI Score</th>
-                        <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Signal</th>
-                        <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recs.map((rec, i) => (
-                        <tr
-                          key={rec.id}
-                          onClick={() => setSelected(selected?.id === rec.id ? null : rec)}
-                          className={`border-b border-gray-100 cursor-pointer transition-colors ${
-                            selected?.id === rec.id ? "bg-blue-50" : "hover:bg-gray-50"
-                          }`}
-                        >
-                          <td className="py-3 px-4">
-                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm font-bold ${
-                              i === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
-                            }`}>
-                              {i + 1}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 font-bold text-blue-600">{rec.stock.symbol}</td>
-                          <td className="py-3 px-4">
-                            <div className="text-gray-900 text-sm">{rec.stock.securityName}</div>
-                            <div className="text-xs text-gray-400">{rec.stock.sector}</div>
-                          </td>
-                          <td className="py-3 px-4 text-right font-semibold text-gray-900">
-                            ₨{fmt(rec.stock.currentPrice)}
-                          </td>
-                          <td className={`py-3 px-4 text-right font-semibold ${rec.stock.percentageChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                            <div className="flex items-center justify-end gap-1">
-                              {rec.stock.percentageChange >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                              {rec.stock.percentageChange >= 0 ? "+" : ""}{rec.stock.percentageChange.toFixed(2)}%
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <span className="font-bold text-gray-900">{(rec.score * 100).toFixed(0)}</span>
-                              <div className="w-16 h-2 bg-gray-200 rounded-full">
-                                <div
-                                  className="h-full rounded-full"
-                                  style={{ width: `${rec.score * 100}%`, background: scoreColor(rec.score) }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span
-                              className="text-xs font-bold px-2.5 py-1 rounded-full"
-                              style={{ background: scoreBg(rec.score), color: scoreColor(rec.score) }}
-                            >
-                              {scoreLabel(rec.score)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); toggleWatchlist(rec.stock.symbol) }}
-                                className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                                title="Add to Watchlist"
-                              >
-                                <Star
-                                  size={15}
-                                  className={watchlist.includes(rec.stock.symbol) ? "text-yellow-500" : "text-gray-400"}
-                                  fill={watchlist.includes(rec.stock.symbol) ? "#eab308" : "none"}
-                                />
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setSelected(rec) }}
-                                className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                                title="View Details"
-                              >
-                                <ChevronRight size={15} className="text-gray-400" />
-                              </button>
-                            </div>
-                          </td>
+
+                {recs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+                    <Brain size={36} className="text-gray-300" />
+                    <p className="text-sm">No recommendations yet.</p>
+                    <button
+                      onClick={handleRefresh}
+                      className="text-sm text-blue-600 font-semibold hover:underline"
+                    >
+                      Generate now
+                    </button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-100">
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">#</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Symbol</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Name</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">LTP</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Change</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">AI Score</th>
+                          <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Signal</th>
+                          <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {recs.map((rec, i) => (
+                          <tr
+                            key={rec.id}
+                            onClick={() => setSelected(selected?.id === rec.id ? null : rec)}
+                            className={`border-b border-gray-100 cursor-pointer transition-colors ${selected?.id === rec.id ? "bg-blue-50" : "hover:bg-gray-50"
+                              }`}
+                          >
+                            <td className="py-3 px-4">
+                              <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-sm font-bold ${i === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
+                                }`}>
+                                {i + 1}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 font-bold text-blue-600">{rec.symbol}</td>
+                            <td className="py-3 px-4">
+                              <div className="text-gray-900 text-sm">{rec.securityName}</div>
+                              <div className="text-xs text-gray-400">{rec.sector}</div>
+                            </td>
+                            <td className="py-3 px-4 text-right font-semibold text-gray-900">
+                              ₨{fmt(rec.ltp)}
+                            </td>
+                            <td className={`py-3 px-4 text-right font-semibold ${rec.percentageChange >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                              <div className="flex items-center justify-end gap-1">
+                                {rec.percentageChange >= 0
+                                  ? <TrendingUp size={14} />
+                                  : <TrendingDown size={14} />}
+                                {rec.percentageChange >= 0 ? "+" : ""}{rec.percentageChange.toFixed(2)}%
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <span className="font-bold text-gray-900">
+                                  {(rec.score * 100).toFixed(0)}
+                                </span>
+                                <div className="w-16 h-2 bg-gray-200 rounded-full">
+                                  <div
+                                    className="h-full rounded-full"
+                                    style={{ width: `${rec.score * 100}%`, background: scoreColor(rec.score) }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className="text-xs font-bold px-2.5 py-1 rounded-full"
+                                style={{ background: scoreBg(rec.score), color: scoreColor(rec.score) }}
+                              >
+                                {scoreLabel(rec.score)}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); toggleWatchlist(rec.symbol) }}
+                                  disabled={togglingWatch === rec.symbol}
+                                  className="p-1.5 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
+                                  title={watchlist.includes(rec.symbol) ? "Remove from Watchlist" : "Add to Watchlist"}
+                                >
+                                  <Star
+                                    size={15}
+                                    className={watchlist.includes(rec.symbol) ? "text-yellow-500" : "text-gray-400"}
+                                    fill={watchlist.includes(rec.symbol) ? "#eab308" : "none"}
+                                  />
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setSelected(rec) }}
+                                  className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                                  title="View Details"
+                                >
+                                  <ChevronRight size={15} className="text-gray-400" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* ── Detail Panel ── */}
             {selected && (
               <div className="bg-white rounded-lg shadow-md border border-gray-200 sticky top-4 h-fit max-h-[calc(100vh-100px)] overflow-y-auto">
-                {/* Panel header */}
                 <div className="flex justify-between items-start p-6 border-b border-gray-100">
                   <div>
-                    <div className="text-xl font-bold text-gray-900">{selected.stock.symbol}</div>
-                    <div className="text-sm text-gray-500 mt-0.5">{selected.stock.securityName}</div>
+                    <div className="text-xl font-bold text-gray-900">{selected.symbol}</div>
+                    <div className="text-sm text-gray-500 mt-0.5">{selected.securityName}</div>
                   </div>
                   <button
                     onClick={() => setSelected(null)}
@@ -400,18 +595,19 @@ export default function AIRecommender() {
                 </div>
 
                 <div className="p-6 space-y-5">
-                  {/* Price block */}
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <div className="text-3xl font-bold text-gray-900">₨{fmt(selected.stock.currentPrice)}</div>
-                    <div className={`flex items-center gap-1 mt-1 font-semibold ${selected.stock.percentageChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {selected.stock.percentageChange >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                      ₨{Math.abs(selected.stock.pointChange).toFixed(2)} ({Math.abs(selected.stock.percentageChange).toFixed(2)}%)
+                    <div className="text-3xl font-bold text-gray-900">₨{fmt(selected.ltp)}</div>
+                    <div className={`flex items-center gap-1 mt-1 font-semibold ${selected.percentageChange >= 0 ? "text-green-600" : "text-red-600"
+                      }`}>
+                      {selected.percentageChange >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                      ₨{Math.abs(selected.pointChange).toFixed(2)} ({Math.abs(selected.percentageChange).toFixed(2)}%)
                     </div>
                   </div>
 
-                  {/* Score breakdown */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">AI Score Breakdown</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      AI Score Breakdown
+                    </p>
                     <ScoreBar label="Trend (30d)" value={selected.trendScore} color="#2563eb" />
                     <ScoreBar label="Fundamentals" value={selected.fundamentalsScore} color="#7c3aed" />
                     <ScoreBar label="Sector Match" value={selected.sectorScore} color="#0891b2" />
@@ -419,17 +615,18 @@ export default function AIRecommender() {
                     <ScoreBar label="Market Activity" value={selected.popularityScore} color="#d97706" />
                   </div>
 
-                  {/* Fundamentals grid */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fundamentals</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      Fundamentals
+                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        { label: "P/E Ratio", value: selected.stock.peRatio.toFixed(1) },
-                        { label: "EPS", value: `₨${selected.stock.eps}` },
-                        { label: "52W High", value: `₨${selected.stock.high52Week}` },
-                        { label: "52W Low", value: `₨${selected.stock.low52Week}` },
-                        { label: "Volume", value: fmt(selected.stock.volume) },
-                        { label: "Market Cap", value: fmtM(selected.stock.marketCap) },
+                        { label: "P/E Ratio", value: selected.peRatio.toFixed(1) },
+                        { label: "EPS", value: `₨${selected.eps}` },
+                        { label: "52W High", value: `₨${selected.high52week}` },
+                        { label: "52W Low", value: `₨${selected.low52week}` },
+                        { label: "Volume", value: fmt(selected.volume) },
+                        { label: "Market Cap", value: fmtM(selected.marketCap) },
                       ].map((f) => (
                         <div key={f.label} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                           <div className="text-xs text-gray-500">{f.label}</div>
@@ -439,29 +636,38 @@ export default function AIRecommender() {
                     </div>
                   </div>
 
-                  {/* AI explanation */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Brain size={14} className="text-blue-600" />
-                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Gemini AI Analysis</span>
+                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                        Gemini AI Analysis
+                      </span>
                     </div>
                     <p className="text-sm text-gray-700 leading-relaxed">{selected.aiExplanation}</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Generated {new Date(selected.generatedAt).toLocaleString()}
+                    </p>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex gap-3">
                     <button
-                      onClick={() => toggleWatchlist(selected.stock.symbol)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border font-semibold text-sm transition-colors ${
-                        watchlist.includes(selected.stock.symbol)
+                      onClick={() => toggleWatchlist(selected.symbol)}
+                      disabled={togglingWatch === selected.symbol}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border font-semibold text-sm transition-colors disabled:opacity-60 ${watchlist.includes(selected.symbol)
                           ? "bg-yellow-50 border-yellow-300 text-yellow-700"
                           : "border-gray-300 text-gray-600 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
-                      <Star size={14} fill={watchlist.includes(selected.stock.symbol) ? "#ca8a04" : "none"} />
-                      {watchlist.includes(selected.stock.symbol) ? "Watching" : "Watchlist"}
+                      <Star
+                        size={14}
+                        fill={watchlist.includes(selected.symbol) ? "#ca8a04" : "none"}
+                      />
+                      {watchlist.includes(selected.symbol) ? "Watching" : "Watchlist"}
                     </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors">
+                    <button
+                      onClick={() => setPortfolioModal(selected)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors"
+                    >
                       <PlusCircle size={14} />
                       Add to Portfolio
                     </button>
@@ -472,23 +678,20 @@ export default function AIRecommender() {
           </div>
 
         ) : (
-          /* ── Profile Tab ── */
           <div className="max-w-xl space-y-4">
             <h3 className="text-lg font-bold text-gray-900">Investment Profile</h3>
 
-            {/* Risk level */}
             <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
               <p className="text-sm font-semibold text-gray-700 mb-3">Risk Tolerance</p>
               <div className="flex gap-3">
-                {(["Low", "Medium", "High"] as RiskLevel[]).map((r) => (
+                {(["Low", "Medium", "High"] as const).map((r) => (
                   <button
                     key={r}
                     onClick={() => setRiskLevel(r)}
-                    className={`flex-1 py-2.5 rounded-lg border font-semibold text-sm transition-all ${
-                      riskLevel === r
+                    className={`flex-1 py-2.5 rounded-lg border font-semibold text-sm transition-all ${riskLevel === r
                         ? "bg-blue-600 border-blue-600 text-white"
                         : "border-gray-300 text-gray-600 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     {r}
                   </button>
@@ -496,19 +699,21 @@ export default function AIRecommender() {
               </div>
             </div>
 
-            {/* Sectors */}
             <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
               <p className="text-sm font-semibold text-gray-700 mb-3">Preferred Sectors</p>
               <div className="flex flex-wrap gap-2">
                 {SECTORS.map((s) => (
                   <button
                     key={s}
-                    onClick={() => setPrefSectors((ps) => ps.includes(s) ? ps.filter((x) => x !== s) : [...ps, s])}
-                    className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${
-                      prefSectors.includes(s)
+                    onClick={() =>
+                      setPrefSectors((ps) =>
+                        ps.includes(s) ? ps.filter((x) => x !== s) : [...ps, s]
+                      )
+                    }
+                    className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${prefSectors.includes(s)
                         ? "bg-blue-600 border-blue-600 text-white"
                         : "border-gray-300 text-gray-600 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     {s}
                   </button>
@@ -517,15 +722,34 @@ export default function AIRecommender() {
             </div>
 
             <button
-              onClick={handleRefresh}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg font-semibold text-sm transition-colors"
             >
-              <Sparkles size={16} />
-              Regenerate AI Recommendations
+              {savingProfile ? (
+                <>
+                  <RefreshCw size={16} style={{ animation: "spin 1s linear infinite" }} />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} />
+                  Save & Regenerate Recommendations
+                </>
+              )}
             </button>
           </div>
         )}
       </div>
+
+      {portfolioModal && (
+        <PortfolioModal
+          symbol={portfolioModal.symbol}
+          currentPrice={portfolioModal.ltp}
+          onConfirm={handleAddPortfolio}
+          onClose={() => setPortfolioModal(null)}
+        />
+      )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
