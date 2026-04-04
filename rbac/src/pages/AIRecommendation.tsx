@@ -24,6 +24,7 @@ import {
   type UserPreferenceUpdateDTO,
 } from "../services/nepseAiService"
 import { useAuth } from "../contexts/AuthContext";
+import { nepseService, type IndexData, type NepseIndexResponse } from "../services/nepseService";
 
 
 
@@ -147,14 +148,12 @@ const PortfolioModal = ({ symbol, currentPrice, onConfirm, onClose }: PortfolioM
   )
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AIRecommender() {
   const { user : currentUser } = useAuth();
   const CURRENT_USER_ID = currentUser?.userId || 0
   const userId = CURRENT_USER_ID
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [user, setUser] = useState<UserProfileDTO | null>(null)
   const [market, setMarket] = useState<MarketSummaryDTO | null>(null)
   const [recs, setRecs] = useState<RecommendationDTO[]>([])
@@ -164,8 +163,8 @@ export default function AIRecommender() {
   const [prefSectors, setPrefSectors] = useState<string[]>([])
   const [riskLevel, setRiskLevel] = useState<"Low" | "Medium" | "High">("Medium")
   const [portfolioModal, setPortfolioModal] = useState<RecommendationDTO | null>(null)
+  const [nepseIndexData,setNepseIndexData] = useState<NepseIndexResponse>()
 
-  // Loading states
   const [loadingInit, setLoadingInit] = useState(true)
   const [loadingRecs, setLoadingRecs] = useState(false)
   const [loadingRefresh, setLoadingRefresh] = useState(false)
@@ -173,23 +172,23 @@ export default function AIRecommender() {
   const [togglingWatch, setTogglingWatch] = useState<string | null>(null)
   const [addingPortfolio, setAddingPortfolio] = useState(false)
 
-  // Error state
   const [error, setError] = useState<string | null>(null)
 
-  // ── Initial load ───────────────────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
       setLoadingInit(true)
       setError(null)
       try {
-        const [profileData, marketData] = await Promise.all([
+        const [profileData, marketData,nepseIndexData] = await Promise.all([
           userService.getProfile(userId.toString()),
           marketService.getMarketSummary(),
+          nepseService.getNepseIndex()
         ])
         setUser(profileData)
         setMarket(marketData)
         setPrefSectors(profileData.preferredSectors)
         setRiskLevel(profileData.riskLevel)
+        setNepseIndexData(nepseIndexData)
 
         const watchlistData = await watchlistService.getWatchlist(userId.toString())
         setWatchlist(watchlistData.map((w) => w.symbol))
@@ -385,12 +384,12 @@ export default function AIRecommender() {
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
         {error && <ErrorBanner message={error} onRetry={handleRefresh} />}
-
+            
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
             {
               title: "NEPSE Index",
-              value: market ? fmt(market.nepseIndex) : "—",
+              value: nepseIndexData?.["NEPSE Index"]?.currentValue ?? 0,
               change: market?.nepseChangePercent ?? 0,
               label: market ? `${market.nepseChangePercent >= 0 ? "+" : ""}${market.nepseChangePercent.toFixed(2)}%` : "—",
             },
@@ -401,16 +400,16 @@ export default function AIRecommender() {
               label: "Today",
             },
             {
-              title: "Advancing",
-              value: market?.advancingStocks ?? "—",
+              title: "Total Transactions",
+              value: market?.totalTransactions?? "—",
               change: 1,
-              label: "stocks up",
+              label: "Daily Activity",
             },
             {
-              title: "Declining",
-              value: market?.decliningStocks ?? "—",
-              change: -1,
-              label: "stocks down",
+              title: "TotalTraded Shares",
+              value: market?.totalTradedShares ?? "—",
+              change: 0,
+              label: "Market Activity",
             },
           ].map((stat) => (
             <div key={stat.title} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">

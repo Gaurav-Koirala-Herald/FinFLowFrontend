@@ -14,6 +14,8 @@ export interface MarketSummaryDTO {
   advancingStocks: number
   decliningStocks: number
   unchangedStocks: number
+  totalTradedShares : number
+  totalTransactions: number
   isMarketOpen: boolean
   lastUpdated: string
 }
