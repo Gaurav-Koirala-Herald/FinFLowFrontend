@@ -21,7 +21,6 @@ export default function Transactions() {
   const [mode, setMode] = useState<"create" | "edit">("create")
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDto | null>(null)
 
-
   useEffect(() => {
     if (!user?.userId) return
     loadTransactions()
@@ -32,7 +31,7 @@ export default function Transactions() {
   const loadTransactions = async () => {
     try {
       const data = await transactionService.getAllTransactions(user!.userId)
-      console.log(data);
+      console.log(data)
       setTransactions(data)
     } catch {
       toast.error("Failed to load transactions.")
@@ -57,22 +56,17 @@ export default function Transactions() {
     }
   }
 
-
   const handleCreate = () => {
     setMode("create")
     setSelectedTransaction(null)
     setIsModalOpen(true)
   }
 
-
-
   const handleEdit = (transaction: TransactionDto) => {
     setMode("edit")
     setSelectedTransaction(transaction)
     setIsModalOpen(true)
   }
-
-
 
   const handleModalSubmit = async (formData: TransactionDto) => {
     try {
@@ -92,8 +86,7 @@ export default function Transactions() {
         )
         if (response) {
           toast.success("Transaction updated successfully!")
-        }
-        else {
+        } else {
           toast.error("Failed to update transaction.")
         }
       }
@@ -117,7 +110,7 @@ export default function Transactions() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-h-screen bg-white dark:bg-gray-950 p-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
@@ -145,14 +138,14 @@ export default function Transactions() {
         initialData={
           mode === "edit" && selectedTransaction
             ? {
-              id: selectedTransaction.id,
-              name: selectedTransaction.name,
-              amount: selectedTransaction.amount,
-              categoryId: selectedTransaction.categoryId,
-              transactionTypeId: selectedTransaction.transactionTypeId,
-              transactionDate: new Date(selectedTransaction.transactionDate),
-              description: selectedTransaction.description,
-            }
+                id: selectedTransaction.id,
+                name: selectedTransaction.name,
+                amount: selectedTransaction.amount,
+                categoryId: selectedTransaction.categoryId,
+                transactionTypeId: selectedTransaction.transactionTypeId,
+                transactionDate: new Date(selectedTransaction.transactionDate),
+                description: selectedTransaction.description,
+              }
             : undefined
         }
         onClose={() => setIsModalOpen(false)}

@@ -35,7 +35,7 @@ export default function TransactionTable({
 }: TransactionTableProps) {
   const [search, setSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<number | "">("")
-  const [selectedType, setSelectedType] = useState<number | "">("") 
+  const [selectedType, setSelectedType] = useState<number | "">("")
   const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -58,8 +58,7 @@ export default function TransactionTable({
       case "all":
         return true
       case "today":
-        const todayDate = new Date(today)
-        return transactionDate.toDateString() === todayDate.toDateString()
+        return transactionDate.toDateString() === new Date(today).toDateString()
       case "week":
         const weekAgo = new Date(today)
         weekAgo.setDate(today.getDate() - 7)
@@ -88,7 +87,6 @@ export default function TransactionTable({
     const matchesCategory = selectedCategory === "" || t.categoryId === selectedCategory
     const matchesType = selectedType === "" || t.transactionTypeId === selectedType
     const matchesDate = filterByDate(t)
-    
     return matchesSearch && matchesCategory && matchesType && matchesDate
   })
 
@@ -120,23 +118,19 @@ export default function TransactionTable({
     }
   }
 
-  const getIncome = () => {
-    return filteredData.reduce((sum, t) => {
-      const type = transactionTypes.find(tt => tt.id === t.transactionTypeId);
-      return type?.name.toLowerCase() === 'income' ? sum + t.amount : sum;
-    }, 0);
-  }
+  const getIncome = () =>
+    filteredData.reduce((sum, t) => {
+      const type = transactionTypes.find(tt => tt.id === t.transactionTypeId)
+      return type?.name.toLowerCase() === 'income' ? sum + t.amount : sum
+    }, 0)
 
-  const getExpense = () => {
-    return filteredData.reduce((sum, t) => {
-      const type = transactionTypes.find(tt => tt.id === t.transactionTypeId);
-      return type?.name.toLowerCase() === 'expense' ? sum + t.amount : sum;
-    }, 0);
-  }
+  const getExpense = () =>
+    filteredData.reduce((sum, t) => {
+      const type = transactionTypes.find(tt => tt.id === t.transactionTypeId)
+      return type?.name.toLowerCase() === 'expense' ? sum + t.amount : sum
+    }, 0)
 
-  const calculateNetWorth = () => {
-    return getIncome() - getExpense();
-  }
+  const calculateNetWorth = () => getIncome() - getExpense()
 
   useEffect(() => {
     setCurrentPage(1)
@@ -144,26 +138,29 @@ export default function TransactionTable({
 
   return (
     <div className="relative bg-card gap-4 rounded-lg shadow-md p-4">
+      {/* Gradient overlay */}
       <div
-        className={`absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+        className={`absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 transition-opacity duration-1000 ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
       />
 
+      {/* Filters */}
       <div
-        className={`relative mb-4 space-y-3 transition-all duration-700 ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'
-          }`}
+        className={`relative mb-4 space-y-3 transition-all duration-700 ${
+          isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'
+        }`}
       >
-        {/* First Row: Search and Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <input
             type="text"
             placeholder="Search transactions..."
-            className="flex-1 min-w-[200px] px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
+            className="flex-1 min-w-[200px] px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <select
-            className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
+            className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value === "" ? "" : Number(e.target.value))}
           >
@@ -173,7 +170,7 @@ export default function TransactionTable({
             ))}
           </select>
           <select
-            className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
+            className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value === "" ? "" : Number(e.target.value))}
           >
@@ -188,7 +185,7 @@ export default function TransactionTable({
           <div className="flex items-center gap-2">
             <Calendar size={18} className="text-muted-foreground" />
             <select
-              className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
+              className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
               value={dateRange}
               onChange={(e) => {
                 setDateRange(e.target.value as any)
@@ -211,32 +208,33 @@ export default function TransactionTable({
             <>
               <input
                 type="date"
-                className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
+                className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                placeholder="Start date"
               />
               <span className="text-muted-foreground">to</span>
               <input
                 type="date"
-                className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
+                className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                placeholder="End date"
               />
             </>
           )}
         </div>
       </div>
 
+      {/* Table */}
       <div
-        className={`relative overflow-x-auto transition-all duration-700 delay-200 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-          }`}
+        className={`relative overflow-x-auto transition-all duration-700 delay-200 ${
+          isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+        }`}
       >
         <table className="min-w-full divide-y divide-border">
           <thead
-            className={`bg-secondary/50 transition-all duration-700 delay-300 ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
-              }`}
+            className={`bg-secondary/50 transition-all duration-700 delay-300 ${
+              isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
+            }`}
           >
             <tr>
               <th className="px-4 py-2 text-left text-sm font-semibold text-muted-foreground">Title</th>
@@ -258,27 +256,28 @@ export default function TransactionTable({
             {paginatedData.map((transaction, idx) => (
               <tr
                 key={transaction.id}
-                className={`transition-all duration-500 hover:bg-primary/10 ${idx % 2 === 0 ? "bg-card" : "bg-card/95"
-                  } ${!isPageChanging ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`}
-                style={{
-                  transitionDelay: !isPageChanging ? `${idx * 50}ms` : '0ms'
-                }}
+                className={`transition-all duration-500 hover:bg-primary/10 ${
+                  idx % 2 === 0 ? "bg-card" : "bg-card/95"
+                } ${!isPageChanging ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`}
+                style={{ transitionDelay: !isPageChanging ? `${idx * 50}ms` : '0ms' }}
               >
-                <td className="px-4 py-3 text-sm">{transaction.name}</td>
-                <td className="px-4 py-3 text-sm">
+                <td className="px-4 py-3 text-sm text-foreground">{transaction.name}</td>
+                <td className="px-4 py-3 text-sm text-foreground">
                   {transactionTypes.find((type) => type.id === transaction.transactionTypeId)?.name}
                 </td>
-                <td className="px-4 py-3 text-sm">
+                <td className="px-4 py-3 text-sm text-foreground">
                   {transactionCategories.find((cat) => cat.id === transaction.categoryId)?.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-right font-medium">
+                <td className="px-4 py-3 text-sm text-right font-medium text-foreground">
                   {transaction.amount.toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-sm">{new Date(transaction.transactionDate).toLocaleDateString()}</td>
+                <td className="px-4 py-3 text-sm text-foreground">
+                  {new Date(transaction.transactionDate).toLocaleDateString()}
+                </td>
                 <td className="px-4 py-3 flex justify-center gap-2">
                   <button
                     onClick={() => onEdit(transaction)}
-                    className="p-1 text-blue-500 hover:text-blue-600 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
+                    className="p-1 text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
                   >
                     <Edit2 size={18} />
                   </button>
@@ -293,12 +292,12 @@ export default function TransactionTable({
             ))}
             <tr>
               <td className="px-4 py-3 flex justify-center gap-2" colSpan={7}>
-                <p className="font-bold">Net Worth</p>
+                <p className="font-bold text-foreground">Net Worth</p>
               </td>
               <td></td>
               <td></td>
               <td></td>
-              <td className="px-4 py-3 text-sm text-right font-bold">
+              <td className="px-4 py-3 text-sm text-right font-bold text-foreground">
                 Rs.{calculateNetWorth().toLocaleString()}
               </td>
             </tr>
@@ -306,24 +305,27 @@ export default function TransactionTable({
         </table>
       </div>
 
+      {/* Pagination */}
       {filteredData.length > 0 && (
-        <div className={`relative flex justify-between items-center mt-4 pt-4 border-t border-border transition-all duration-700 delay-400 ${
-          isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-        }`}>
+        <div
+          className={`relative flex justify-between items-center mt-4 pt-4 border-t border-border transition-all duration-700 delay-400 ${
+            isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          }`}
+        >
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
-            className="text-sm text-blue-500 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
+            className="text-sm text-blue-500 dark:text-blue-400 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 font-medium"
           >
             Previous
           </button>
-          <p className="text-sm text-gray-500 flex items-center font-medium">
+          <p className="text-sm text-muted-foreground flex items-center font-medium">
             Page {currentPage} of {totalPages} ({filteredData.length} transactions)
           </p>
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className="text-sm text-blue-500 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
+            className="text-sm text-blue-500 dark:text-blue-400 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 font-medium"
           >
             Next
           </button>

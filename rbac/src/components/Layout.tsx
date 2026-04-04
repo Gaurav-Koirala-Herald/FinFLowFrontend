@@ -29,13 +29,13 @@ export default function Layout() {
   const filteredNavItems = navItems.filter((item) => !item.privilege || hasPrivilege(item.privilege))
 
   return (
-    <div className="min-h-screen bg-secondary/30 flex">
-      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col">
-        <div className="h-16 flex items-center justify-center px-6 border-b border-border flex-shrink-0">
-          <h1 className="text-xl font-bold text-primary">Fin Flow</h1>
+    <div className="min-h-screen dark:bg-gray-950 bg-secondary/30 flex">
+      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border dark:bg-gray-950 flex flex-col">
+        <div className="h-16 flex items-center justify-center px-6 border-b dark:bg-gray-950 border-border flex-shrink-0">
+          <h1 className="text-xl dark:text-blue-400 font-bold text-primary">Fin Flow</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 dark:bg-gray-950 overflow-y-auto">
           <nav className="px-4 py-6 space-y-1">
             {filteredNavItems.map((item) => {
               const Icon = item.icon
@@ -44,7 +44,7 @@ export default function Layout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors ${isActive
+                  className={`flex items-center gap-3 px-4 py-3 dark:text-gray-100 rounded-md text-sm font-medium transition-colors ${isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     }`}
@@ -57,7 +57,7 @@ export default function Layout() {
           </nav>
 
           <div className="px-4 py-4 mt-4">
-            <div className="mb-3 px-4 py-2 text-sm text-muted-foreground truncate">
+            <div className="mb-3 px-4 py-2 dark:text-gray-100 text-sm text-muted-foreground truncate">
               {user?.username}
             </div>
             <button

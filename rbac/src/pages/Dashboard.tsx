@@ -22,7 +22,7 @@ import { type ChartOptions } from "chart.js";
 import { TrendingUp, TrendingDown, DollarSign, Calendar, PieChart as PieChartIcon } from "lucide-react";
 import { commonService } from "../services/commonService";
 import { DynamicAreaChart } from "../components/DynamicAreaChart";
-import  DashboardGoals  from "../components/DashboardGoalsf";
+import DashboardGoals from "../components/DashboardGoals";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -49,10 +49,7 @@ export default function Dashboard() {
   const transactionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
+    const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -75,17 +72,12 @@ export default function Dashboard() {
 
         setTimeout(() => {
           setLoading(false);
-
-          setTimeout(() => {
-            setLoaded(true);
-          }, 10);
+          setTimeout(() => setLoaded(true), 10);
         }, 10);
       } catch (error) {
         console.error("Failed to fetch transactions:", error);
         setLoading(false);
-        setTimeout(() => {
-          setLoaded(true);
-        }, 100);
+        setTimeout(() => setLoaded(true), 100);
       }
     };
 
@@ -108,17 +100,15 @@ export default function Dashboard() {
     setSavingsRate(savingsRatePercentage);
   };
 
-
   const getIncomeByCategory = async (data: Transaction[]) => {
     const categoryMap: { [key: string]: number } = {};
     const transactionCategories = await commonService.getTransactionCategories();
     data
       .filter((t) => t.transactionTypeId === 1)
       .forEach((t) => {
-        const categoryName = transactionCategories.find((cat: { id: any; }) => cat.id === t.categoryId)?.name || "Uncategorized";
+        const categoryName = transactionCategories.find((cat: { id: any }) => cat.id === t.categoryId)?.name || "Uncategorized";
         categoryMap[categoryName] = (categoryMap[categoryName] || 0) + (t.amount ?? 0);
       });
-
 
     return {
       labels: Object.keys(categoryMap),
@@ -151,7 +141,7 @@ export default function Dashboard() {
     data
       .filter((t) => t.transactionTypeId === 2)
       .forEach((t) => {
-        const categoryName = transactionCategories.find((cat: { id: any; }) => cat.id === t.categoryId)?.name || "Uncategorized";
+        const categoryName = transactionCategories.find((cat: { id: any }) => cat.id === t.categoryId)?.name || "Uncategorized";
         categoryMap[categoryName] = (categoryMap[categoryName] || 0) + (t.amount ?? 0);
       });
 
@@ -180,32 +170,6 @@ export default function Dashboard() {
     };
   };
 
-  const financialOverviewData = {
-    labels: transactions.map((t) =>
-      new Date(t.transactionDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    ),
-    datasets: [
-      {
-        label: "Income",
-        data: transactions
-          .filter((t) => t.transactionTypeId === 1)
-          .map((t) => t.amount ?? 0),
-        borderColor: "rgba(75, 192, 192, 1)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        fill: true,
-      },
-      {
-        label: "Expenses",
-        data: transactions
-          .filter((t) => t.transactionTypeId === 2)
-          .map((t) => t.amount ?? 0),
-        borderColor: "rgba(255, 99, 132, 1)",
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        fill: true,
-      },
-    ],
-  };
-
   const chartOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -226,9 +190,9 @@ export default function Dashboard() {
         position: "bottom" as const,
         labels: {
           padding: 15,
-          font: {
-            size: 11
-          }
+          font: { size: 11 },
+          // lighter text in dark mode is handled via CSS; Chart.js doesn't read Tailwind
+          color: undefined,
         }
       },
       tooltip: {
@@ -251,7 +215,6 @@ export default function Dashboard() {
     currentPage * itemsPerPage
   );
 
-
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
@@ -262,10 +225,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-950 dark:to-gray-900">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-blue-600 font-semibold text-lg">Loading Financial Dashboard...</p>
+          <div className="w-16 h-16 border-4 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-blue-600 dark:text-blue-400 font-semibold text-lg">Loading Financial Dashboard...</p>
         </div>
       </div>
     );
@@ -280,52 +243,52 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-6 relative overflow-hidden min-h-screen">
 
+      {/* Background layer 1 */}
       <div
-        className={`fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pointer-events-none transition-opacity duration-1000 ${loaded ? 'opacity-100' : 'opacity-0'
-          }`}
+        className={`fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pointer-events-none transition-opacity duration-1000 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         style={{ transform: `translateY(${scrollY * 0.5}px)` }}
       />
 
+      {/* Background layer 2 */}
       <div
-        className={`fixed inset-0 bg-gradient-to-tr from-transparent via-blue-100/30 to-transparent pointer-events-none transition-opacity duration-1000 delay-300 ${loaded ? 'opacity-100' : 'opacity-0'
-          }`}
+        className={`fixed inset-0 bg-gradient-to-tr from-transparent via-blue-100/30 dark:via-blue-900/10 to-transparent pointer-events-none transition-opacity duration-1000 delay-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         style={{ transform: `translateY(${scrollY * -0.3}px)` }}
       />
 
       <div className="flex-1 space-y-6 relative z-10">
 
+        {/* Welcome header */}
         <div
           ref={headerRef}
-          className={`bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg transition-all duration-700 ${loaded ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'
-            }`}
+          className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-4 rounded-lg shadow-lg transition-all duration-700 ${loaded ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'}`}
           style={{ transform: `translateY(${loaded ? -headerParallax * 0.1 : -48}px)` }}
         >
-          <h2 className="text-lg font-semibold text-blue-700">Welcome to FinFlow</h2>
-          <p className="text-sm text-blue-600">
+          <h2 className="text-lg font-semibold text-blue-700 dark:text-blue-400">Welcome to FinFlow</h2>
+          <p className="text-sm text-blue-600 dark:text-blue-300">
             Explore your personalized financial dashboard to gain actionable insights into your
             financial health.
           </p>
         </div>
 
+        {/* Metric cards */}
         <div
           ref={metricsRef}
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
           style={{ transform: `translateY(${-metricsParallax * 0.15}px)` }}
         >
           {[
-            { label: "Total Balance", value: `$${totalBalance.toFixed(2)}`, color: "text-green-600", icon: DollarSign, delay: "delay-100" },
-            { label: "Monthly Income", value: `$${monthlyIncome.toFixed(2)}`, color: "text-blue-600", icon: TrendingUp, delay: "delay-200" },
-            { label: "Monthly Expenses", value: `$${monthlyExpenses.toFixed(2)}`, color: "text-red-600", icon: TrendingDown, delay: "delay-300" },
+            { label: "Total Balance", value: `Rs.${totalBalance.toFixed(2)}`, color: "text-green-600 dark:text-green-400", icon: DollarSign, delay: "delay-100" },
+            { label: "Monthly Income", value: `Rs.${monthlyIncome.toFixed(2)}`, color: "text-blue-600 dark:text-blue-400", icon: TrendingUp, delay: "delay-200" },
+            { label: "Monthly Expenses", value: `Rs.${monthlyExpenses.toFixed(2)}`, color: "text-red-600 dark:text-red-400", icon: TrendingDown, delay: "delay-300" },
           ].map((metric, idx) => {
             const Icon = metric.icon;
             return (
               <div
                 key={idx}
-                className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 ${metric.delay}  hover:shadow-2xl hover:-translate-y-1 ${loaded ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'
-                  }`}
+                className={`bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 ${metric.delay} hover:shadow-2xl hover:-translate-y-1 ${loaded ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'}`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-500">{metric.label}</p>
+                  <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{metric.label}</p>
                   <Icon className={`${metric.color} w-5 h-5`} />
                 </div>
                 <p className={`text-3xl font-bold ${metric.color} transition-all duration-500`}>
@@ -336,84 +299,80 @@ export default function Dashboard() {
           })}
         </div>
 
-        <   div
+        {/* Financial overview chart */}
+        <div
           ref={chartRef}
-          className={`bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-500 hover:shadow-2xl ${loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-            }`}
+          className={`bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-500 hover:shadow-2xl ${loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
           style={{ transform: `translateY(${loaded ? -chartParallax * 0.2 : 48}px)` }}
         >
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Financial Overview</h3>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Financial Overview</h3>
           <div className="h-full min-h-[300px]">
             <DynamicAreaChart transactions={transactions} />
           </div>
         </div>
 
+        {/* Pie charts */}
         <div
           ref={pieChartsRef}
-          className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-700 delay-[600ms] ${loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-            }`}
+          className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-700 delay-[600ms] ${loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
           style={{ transform: `translateY(${loaded ? -pieChartsParallax * 0.2 : 48}px)` }}
         >
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-600" />
+          <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
               Income by Category
             </h3>
             <div className="h-64">
-              {(incomeData).labels.length > 0 ? (
+              {incomeData.labels.length > 0 ? (
                 <Pie data={incomeData} options={pieChartOptions} />
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
+                <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
                   <p>No income data available</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <TrendingDown className="w-5 h-5 text-red-600" />
+          <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+              <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
               Expenses by Category
             </h3>
             <div className="h-64">
               {expenseData.labels.length > 0 ? (
                 <Pie data={expenseData} options={pieChartOptions} />
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
+                <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
                   <p>No expense data available</p>
                 </div>
               )}
             </div>
           </div>
         </div>
-          <DashboardGoals loaded={loaded} scrollY={scrollY} />
+
+        <DashboardGoals loaded={loaded} scrollY={scrollY} />
       </div>
 
-
-
+      {/* Recent Transactions sidebar */}
       <div
         ref={transactionsRef}
-        className={`flex-none w-full lg:w-80 bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-[700ms] hover:shadow-2xl max-h-[600px] overflow-y-auto relative z-10 ${loaded ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'
-          }`}
+        className={`flex-none w-full lg:w-80 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-6 rounded-lg shadow-lg transition-all duration-700 delay-[700ms] hover:shadow-2xl max-h-[600px] overflow-y-auto relative z-10 ${loaded ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0'}`}
         style={{ transform: `translateY(${-transactionsParallax * 0.25}px)` }}
       >
-        <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-blue-600" />
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           Recent Transactions
         </h3>
         <ul className="space-y-3">
           {paginatedTransactions.map((transaction, idx) => (
             <li
               key={transaction.id}
-              className={`flex justify-between items-center rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/50 p-4 shadow-sm transition-all duration-500 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50  hover:shadow-md ${loaded ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
-                }`}
-              style={{
-                transitionDelay: `${800 + idx * 100}ms`
-              }}
+              className={`flex justify-between items-center rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-800/50 p-4 shadow-sm transition-all duration-500 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 hover:shadow-md ${loaded ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'}`}
+              style={{ transitionDelay: `${800 + idx * 100}ms` }}
             >
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">{transaction.name}</p>
-                <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{transaction.name}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-1">
                   <Calendar className="w-3 h-3" />
                   {new Date(transaction.transactionDate).toLocaleDateString("en-US", {
                     month: "short",
@@ -423,12 +382,14 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-2">
                 {transaction.transactionTypeId === 1 ? (
-                  <TrendingUp className="w-4 h-4 text-green-600" />
+                  <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
                 ) : (
-                  <TrendingDown className="w-4 h-4 text-red-600" />
+                  <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" />
                 )}
                 <span
-                  className={`text-sm font-bold ${transaction.transactionTypeId === 1 ? "text-green-600" : "text-red-600"
+                  className={`text-sm font-bold ${transaction.transactionTypeId === 1
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
                     }`}
                 >
                   ${transaction.amount?.toFixed(2)}
@@ -437,21 +398,22 @@ export default function Dashboard() {
             </li>
           ))}
         </ul>
-        <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
+
+        <div className="flex justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
-            className="text-sm text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200  active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
+            className="text-sm text-blue-600 dark:text-blue-400 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 font-medium"
           >
             Previous
           </button>
-          <p className="text-sm text-gray-500 flex items-center font-medium">
+          <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center font-medium">
             Page {currentPage} of {totalPages}
           </p>
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className="text-sm text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200  active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 font-medium"
+            className="text-sm text-blue-600 dark:text-blue-400 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 font-medium"
           >
             Next
           </button>

@@ -260,17 +260,6 @@ export default function ProfilePage() {
           style={{ transform: `translateY(${loaded ? -reportsParallax * 0.25 : 48}px)` }}
         />
 
-        {/* Footer */}
-        <div className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg p-6 shadow-lg transition-all duration-700 delay-700 ${loaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-          <div className="flex justify-center gap-6 text-sm text-gray-600 dark:text-gray-400 mb-4">
-            <a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">Privacy Policy</a>
-            <a href="#" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300">Terms of Service</a>
-            <a href="#" className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-300">Contact</a>
-            <a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">About</a>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-600 text-center">2024 FlixFlow. All rights reserved.</p>
-        </div>
-
       </div>
     </div>
   );
