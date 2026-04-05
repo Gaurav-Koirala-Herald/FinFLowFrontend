@@ -3,32 +3,111 @@
 import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Shield } from "lucide-react"
+import { Eye, Shield } from "lucide-react"
 import { authService } from "../services/authService"
 import { toast } from "sonner"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function AuthPage() {
   const navigate = useNavigate()
-  const {login} = useAuth();
+  const { login } = useAuth()
   const [activeTab, setActiveTab] = useState<"login" | "register">("login")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  // Login fields
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
+  // Register fields
   const [regUsername, setRegUsername] = useState("")
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [regPassword, setRegPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
+
+  const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+  const validateLogin = (): boolean => {
+    if (!username.trim()) {
+      setError("Username is required")
+      return false
+    }
+    if (!password) {
+      setError("Password is required")
+      return false
+    }
+    return true
+  }
+
+  const validateRegister = (): boolean => {
+    if (!regUsername.trim()) {
+      setError("Username is required")
+      return false
+    }
+    if (regUsername.trim().length < 3) {
+      setError("Username must be at least 3 characters")
+      return false
+    }
+
+    if (!fullName.trim()) {
+      setError("Full name is required")
+      return false
+    }
+    // Fix 3: cleaner digit check — original logic was correct but verbose
+    if (/\d/.test(fullName)) {
+      setError("Full name cannot contain numbers")
+      return false
+    }
+    if (fullName.trim().length < 2) {
+      setError("Full name must be at least 2 characters")
+      return false
+    }
+
+    // Fix 4: email format was never validated
+    if (!email.trim()) {
+      setError("Email is required")
+      return false
+    }
+    if (!EMAIL_REGEX.test(email)) {
+      setError("Please enter a valid email address")
+      return false
+    }
+
+    // Fix 1 `payoff`: .test() now actually runs against the regex
+    if (!regPassword) {
+      setError("Password is required")
+      return false
+    }
+    if (!STRONG_PASSWORD_REGEX.test(regPassword)) {
+      setError(
+        "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character (@$!%*?&)"
+      )
+      return false
+    }
+
+    if (!confirmPassword) {
+      setError("Please confirm your password")
+      return false
+    }
+    if (regPassword !== confirmPassword) {
+      setError("Passwords do not match")
+      return false
+    }
+
+    return true
+  }
+
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    setLoading(true)
 
+    if (!validateLogin()) return
+
+    setLoading(true)
     try {
       await login(username, password)
     } catch (err: any) {
@@ -42,14 +121,11 @@ export default function AuthPage() {
     e.preventDefault()
     setError("")
 
-    if (regPassword !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
+    if (!validateRegister()) return
 
     setLoading(true)
-
     try {
+      // Fix 2 cont: was passing `username` (login field) — now correctly uses `regUsername`
       const response = await authService.register({
         username: regUsername,
         email,
@@ -57,19 +133,25 @@ export default function AuthPage() {
         fullName,
       })
 
-      if (response)
-        navigate("/verify-otp", {
-          state: { email, isLogin: false }
-        })
-
-      else toast.error("Registration failed. Please try again.")
-      setActiveTab("login")
+      // Fix 5: was `if (response)` immediately followed by `if (!response)` then `else` — logically broken
+      if (response) {
+        toast.success("Account created! Please verify your email.")
+        navigate("/verify-otp", { state: { email, isLogin: false } })
+      } else {
+        setError("Registration failed. Please try again.")
+      }
     } catch (err: any) {
-      setError("Registration failed")
+      setError(err.response?.data?.message || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }
   }
+
+  const handleTabSwitch = (tab: "login" | "register") => {
+    setActiveTab(tab)
+    setError("")
+  }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/20 px-4">
@@ -89,19 +171,19 @@ export default function AuthPage() {
           {/* Tabs */}
           <div className="flex mb-6 border border-border rounded-md overflow-hidden">
             <button
-              onClick={() => setActiveTab("login")}
+              onClick={() => handleTabSwitch("login")}
               className={`flex-1 py-2 text-sm font-medium ${activeTab === "login"
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-muted-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted text-muted-foreground"
                 }`}
             >
               Login
             </button>
             <button
-              onClick={() => setActiveTab("register")}
+              onClick={() => handleTabSwitch("register")}
               className={`flex-1 py-2 text-sm font-medium ${activeTab === "register"
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-muted-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted text-muted-foreground"
                 }`}
             >
               Register
@@ -114,8 +196,9 @@ export default function AuthPage() {
             </div>
           )}
 
+          {/* Login Form */}
           {activeTab === "login" && (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" noValidate>
               <div>
                 <label className="block text-sm font-medium mb-1">Username</label>
                 <input
@@ -123,7 +206,8 @@ export default function AuthPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                  required
+                  placeholder="Enter your username"
+                  autoComplete="username"
                 />
               </div>
 
@@ -134,7 +218,8 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                  required
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
                 />
               </div>
 
@@ -148,30 +233,34 @@ export default function AuthPage() {
             </form>
           )}
 
+          {/* Register Form */}
           {activeTab === "register" && (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Username</label>
-                <input
-                  type="text"
-                  value={regUsername}
-                  onChange={(e) => setRegUsername(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                  required
-                />
-              </div>
+            <form onSubmit={handleRegister} className="space-y-4" noValidate>
+              <div className="flex gap-2">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={regUsername}
+                    onChange={(e) => setRegUsername(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
+                    placeholder="Choose a username"
+                    autoComplete="username"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Full Name</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
+                    placeholder="Enter your full name"
+                    autoComplete="name"
+                  />
+                </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">Email</label>
                 <input
@@ -179,7 +268,8 @@ export default function AuthPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                  required
+                  placeholder="Enter your email"
+                  autoComplete="email"
                 />
               </div>
 
@@ -190,20 +280,24 @@ export default function AuthPage() {
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                  required
+                  placeholder="Create a strong password"
+                  autoComplete="new-password"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Min 8 chars, uppercase, lowercase, number & special character
+                  
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Confirm Password
-                </label>
+                <label className="block text-sm font-medium mb-1">Confirm Password</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary"
-                  required
+                  placeholder="Repeat your password"
+                  autoComplete="new-password"
                 />
               </div>
 
